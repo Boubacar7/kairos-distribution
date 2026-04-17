@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Kairos Admin Avancé</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f6f3;--surface:#fff;--surface2:#f2efea;--text:#201b1a;--muted:#7a706b;--primary:#8f3f5d;--border:#e4d8d3;--success:#437a22;--warning:#a36d2b;--danger:#a04357;--radius:20px;--shadow:0 18px 42px rgba(32,27,26,.08)}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.55} a{text-decoration:none;color:inherit} button,input,select,textarea{font:inherit}
+.container{width:min(1240px,calc(100% - 32px));margin:auto}
+.top{position:sticky;top:0;z-index:20;background:rgba(247,246,243,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.top-inner{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800}.mark{width:40px;height:40px;border-radius:14px;background:var(--primary);display:grid;place-items:center;color:#fff}
+.nav{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:14px}.nav a.active{color:var(--primary);font-weight:700}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:.8rem 1rem;border-radius:999px;border:1px solid var(--border);background:var(--surface);font-weight:700}.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.grid-hero{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;padding:22px 0}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.panel-body{padding:20px}
+h1,h2,h3{margin:0;line-height:1.1} h1{font-size:clamp(2rem,1.2rem + 2.3vw,3.4rem)} p{margin:.5rem 0 0;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}.stat{padding:16px;border-radius:16px;background:var(--surface2);border:1px solid var(--border)} .stat strong{display:block;font-size:24px;color:var(--text)}
+.section{padding:18px 0}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}.search{flex:1;min-width:240px;padding:14px 15px;border:1px solid var(--border);border-radius:14px;background:#fff}
+.filters{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer}.chip.active{background:#fff3f1;color:var(--primary);border-color:var(--primary)}
+.grid-kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.kpi{padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--border)}.kpi .v{display:block;font-size:22px;font-weight:800;margin-top:6px}
+.layout{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+.table-wrap{overflow:auto;border-radius:18px;border:1px solid var(--border)}
+.table{width:100%;border-collapse:collapse;background:#fff;min-width:980px}.table th,.table td{padding:14px 12px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}.table th{position:sticky;top:0;background:var(--surface2);z-index:1}.badge{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}.b-new{background:#f2edf0;color:var(--primary)}.b-prep{background:#fff3e0;color:var(--warning)}.b-shipped{background:#e8efe1;color:var(--success)}.b-done{background:#e9f3ff;color:#2467b4}.b-cancel{background:#f8e8ea;color:var(--danger)}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.card{padding:16px;border:1px solid var(--border);border-radius:18px;background:var(--bg)} .mini{font-size:14px;color:var(--muted)}
+.list{display:grid;gap:10px}.item{padding:14px;border:1px solid var(--border);border-radius:16px;background:var(--bg)}
+.form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.full{grid-column:1/-1} input,select,textarea{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;color:var(--text)} textarea{min-height:110px;resize:vertical}
+.chart{padding:18px;height:240px;background:linear-gradient(180deg,#f6e7ec,#fff);border:1px solid var(--border);border-radius:18px}.bars{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;align-items:end;height:150px;margin-top:16px}.bars span{display:block;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,var(--primary),#c98aa1)}
+.side{display:grid;gap:18px}.notif{display:grid;gap:10px}.note{padding:14px;border:1px solid var(--border);border-radius:16px;background:var(--bg)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.small{font-size:14px;color:var(--muted)}
+.footer{padding:24px 0 42px;color:var(--muted)}
+@media(max-width:1080px){.grid-hero,.layout{grid-template-columns:1fr}.grid-kpi{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.grid-kpi,.cards,.form{grid-template-columns:1fr}.top-inner{align-items:flex-start}.table{min-width:860px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="container top-inner">
+    <div class="brand"><div class="mark">K</div><div><div>Kairos Administration</div><div class="small">/admistration</div></div></div>
+    <nav class="nav"><a href="#dashboard" class="active">Dashboard</a><a href="#orders">Commandes</a><a href="#products">Produits</a><a href="#sales">Ventes</a><a href="#notifications">Notifications</a><a href="#settings">Réglages</a></nav>
+    <div class="actions"><a class="btn" href="/">Retour boutique</a><button class="btn" id="exportBtn">Export CSV</button><button class="btn" id="themeBtn">Thème</button></div>
+  </div>
+</header>
+<main class="container">
+<section class="grid-hero" id="dashboard">
+  <article class="panel panel-body">
+    <h1>Dashboard admin avancé</h1>
+    <p>Suivi des ventes, commandes, stocks, alertes et actions opérationnelles pour Kairos Distributions.</p>
+    <div class="stats">
+      <div class="stat"><span class="small">CA mois</span><strong>12.4M FCFA</strong></div>
+      <div class="stat"><span class="small">Commandes</span><strong>128</strong></div>
+      <div class="stat"><span class="small">En attente</span><strong>17</strong></div>
+      <div class="stat"><span class="small">Produits</span><strong>24</strong></div>
+    </div>
+  </article>
+  <aside class="side">
+    <div class="panel panel-body"><h2>Notifications</h2><div class="notif"><div class="note"><strong>Nouvelle commande KD-2026-0106</strong><div class="small">Récente commande à traiter.</div></div><div class="note"><strong>Paiement confirmé</strong><div class="small">KD-2026-0102 validée.</div></div><div class="note"><strong>Stock faible</strong><div class="small">Glow Skin Crème en dessous du seuil.</div></div></div></div>
+    <div class="panel panel-body"><h2>Actions rapides</h2><p>Confirmer paiement, modifier prix, appliquer promo, valider avis, relancer client.</p></div>
+  </aside>
+</section>
+<section class="section" id="sales">
+  <div class="layout">
+    <article class="panel panel-body">
+      <div class="toolbar"><div><h2>Évolution des ventes</h2><p>Vue mensuelle et tendances récentes.</p></div><div class="filters"><button class="chip active">12 mois</button><button class="chip">30 jours</button><button class="chip">7 jours</button></div></div>
+      <div class="grid-kpi">
+        <div class="kpi"><div class="small">CA total</div><span class="v">28.7M</span></div>
+        <div class="kpi"><div class="small">Panier moyen</div><span class="v">32 900</span></div>
+        <div class="kpi"><div class="small">Conversion</div><span class="v">3.8%</span></div>
+        <div class="kpi"><div class="small">Retours</div><span class="v">2.1%</span></div>
+        <div class="kpi"><div class="small">Nouveaux clients</div><span class="v">41%</span></div>
+      </div>
+      <div class="chart"><strong>Ventes par mois</strong><div class="bars" id="bars"></div><div class="small">Jan · Fév · Mar · Avr · Mai · Juin · Juil · Août · Sep · Oct · Nov · Déc</div></div>
+    </article>
+    <article class="panel panel-body">
+      <h2>Raccourcis opérationnels</h2>
+      <div class="list" style="margin-top:14px"><div class="item"><strong>Produits à booster</strong><div class="small">Lister les produits à forte marge ou à promouvoir.</div></div><div class="item"><strong>Stock critique</strong><div class="small">Remonter les références presque épuisées.</div></div><div class="item"><strong>Commandes en retard</strong><div class="small">Identifier les commandes à relancer.</div></div></div>
+    </article>
+  </div>
+</section>
+<section class="section" id="orders">
+  <div class="panel panel-body">
+    <div class="toolbar">
+      <div><h2>Commandes passées</h2><p>Recherche, filtrage et suivi des statuts.</p></div>
+      <input id="orderSearch" class="search" placeholder="Rechercher par ID, client, produit ou statut">
+    </div>
+    <div class="filters" style="margin-bottom:12px"><button class="chip active" data-filter="all">Toutes</button><button class="chip" data-filter="new">Nouvelles</button><button class="chip" data-filter="prep">Préparation</button><button class="chip" data-filter="shipped">Expédiées</button><button class="chip" data-filter="done">Livrées</button><button class="chip" data-filter="cancel">Annulées</button></div>
+    <div class="table-wrap"><table class="table" id="ordersTable"><thead><tr><th>ID</th><th>Client</th><th>Produit</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead><tbody>
+      <tr data-status="prep"><td>KD-2026-0106</td><td>Awa Traoré</td><td>Glow Skin Crème</td><td>24 900 FCFA</td><td><span class="badge b-prep">Préparation</span></td><td>17/04/2026</td></tr>
+      <tr data-status="new"><td>KD-2026-0105</td><td>Mariam K.</td><td>Curve Up Gel</td><td>27 500 FCFA</td><td><span class="badge b-new">Nouvelle</span></td><td>17/04/2026</td></tr>
+      <tr data-status="shipped"><td>KD-2026-0104</td><td>Fatou D.</td><td>Trim Active Plus</td><td>18 500 FCFA</td><td><span class="badge b-shipped">Expédiée</span></td><td>16/04/2026</td></tr>
+      <tr data-status="done"><td>KD-2026-0103</td><td>Clara S.</td><td>Lip & Glow Set</td><td>15 900 FCFA</td><td><span class="badge b-done">Livrée</span></td><td>16/04/2026</td></tr>
+      <tr data-status="cancel"><td>KD-2026-0102</td><td>Sarah B.</td><td>Glow Skin Crème</td><td>24 900 FCFA</td><td><span class="badge b-cancel">Annulée</span></td><td>15/04/2026</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+<section class="section" id="products">
+  <div class="layout">
+    <article class="panel panel-body">
+      <div class="toolbar"><div><h2>Gestion des produits</h2><p>Créer, modifier, mettre en avant et ajuster les prix.</p></div></div>
+      <form class="form"><div><label>Nom du produit</label><input placeholder="Ex: Glow Skin Crème"></div><div><label>Catégorie</label><select><option>Beauté</option><option>Amincissant</option><option>Boost postérieur</option></select></div><div><label>Prix</label><input placeholder="24 900 FCFA"></div><div><label>Stock</label><input placeholder="57"></div><div><label>Promotion</label><input placeholder="-15%"></div><div><label>Statut</label><select><option>Publié</option><option>Brouillon</option><option>Rupture</option></select></div><div class="full"><label>Description</label><textarea placeholder="Description produit"></textarea></div><div class="full actions"><button class="btn primary" type="button">Ajouter / Mettre à jour</button><button class="btn" type="button">Appliquer promo</button><button class="btn" type="button">Mettre en vedette</button></div></form>
+    </article>
+    <aside class="panel panel-body">
+      <h2>Réception commandes</h2>
+      <div class="cards" style="margin-top:14px">
+        <div class="card"><strong>À confirmer</strong><div class="mini">Validation paiement ou contre-remboursement.</div></div>
+        <div class="card"><strong>À préparer</strong><div class="mini">Emballage, contrôle qualité et étiquette.</div></div>
+        <div class="card"><strong>À expédier</strong><div class="mini">Remise au livreur et génération du suivi.</div></div>
+        <div class="card"><strong>Clôturée</strong><div class="mini">Livrée, annulée ou remboursée.</div></div>
+      </div>
+    </aside>
+  </div>
+</section>
+<section class="section" id="notifications">
+  <div class="layout">
+    <article class="panel panel-body">
+      <h2>Notifications et alertes</h2>
+      <div class="list" style="margin-top:14px"><div class="item"><strong>Commande reçue</strong><div class="small">KD-2026-0106 vient d’arriver.</div></div><div class="item"><strong>Commande en retard</strong><div class="small">KD-2026-0101 dépasse le délai normal.</div></div><div class="item"><strong>Stock critique</strong><div class="small">3 produits nécessitent réassort.</div></div></div>
+    </article>
+    <article class="panel panel-body">
+      <h2>Avis et retours</h2>
+      <div class="list" style="margin-top:14px"><div class="item"><strong>Awa</strong><div class="small">Photo avant/après à valider.</div></div><div class="item"><strong>Fatou</strong><div class="small">Avis 5 étoiles publié.</div></div><div class="item"><strong>Mariam</strong><div class="small">Demande de réponse support.</div></div></div>
+    </article>
+  </div>
+</section>
+<section class="section" id="settings">
+  <div class="panel panel-body">
+    <h2>Réglages rapides</h2>
+    <p>Paramètres liés à la boutique, aux promos et aux canaux de support.</p>
+  </div>
+</section>
+</main>
+<footer class="footer container">Kairos Distributions — administration avancée</footer>
+<script>
+const data=[
+ {id:'KD-2026-0106',client:'Awa Traoré',product:'Glow Skin Crème',amount:'24 900 FCFA',status:'Préparation',date:'17/04/2026'},
+ {id:'KD-2026-0105',client:'Mariam K.',product:'Curve Up Gel',amount:'27 500 FCFA',status:'Nouvelle',date:'17/04/2026'},
+ {id:'KD-2026-0104',client:'Fatou D.',product:'Trim Active Plus',amount:'18 500 FCFA',status:'Expédiée',date:'16/04/2026'},
+ {id:'KD-2026-0103',client:'Clara S.',product:'Lip & Glow Set',amount:'15 900 FCFA',status:'Livrée',date:'16/04/2026'},
+ {id:'KD-2026-0102',client:'Sarah B.',product:'Glow Skin Crème',amount:'24 900 FCFA',status:'Annulée',date:'15/04/2026'}
+];
+const chart=[34,52,45,68,81,60,74,83,57,91,69,95];
+document.getElementById('bars').innerHTML=chart.map(v=>`<span style="height:${v}%"></span>`).join('');
+const tbody=document.querySelector('#ordersTable tbody');
+const render=(rows)=>tbody.innerHTML=rows.map(r=>`<tr data-status="${r.status.toLowerCase().slice(0,4)}"><td>${r.id}</td><td>${r.client}</td><td>${r.product}</td><td>${r.amount}</td><td><span class="badge ${r.status==='Nouvelle'?'b-new':r.status==='Préparation'?'b-prep':r.status==='Expédiée'?'b-shipped':r.status==='Livrée'?'b-done':'b-cancel'}">${r.status}</span></td><td>${r.date}</td></tr>`).join('');
+render(data);
+let current='all';
+const chips=[...document.querySelectorAll('.chip[data-filter]')];
+function apply(){const q=document.getElementById('orderSearch').value.toLowerCase(); const rows=data.filter(r=>{const okSearch=[r.id,r.client,r.product,r.amount,r.status,r.date].join(' ').toLowerCase().includes(q); const st=current==='all'||r.status.toLowerCase().startsWith(current); return okSearch&&st;}); render(rows);}
+document.getElementById('orderSearch').addEventListener('input',apply);
+chips.forEach(ch=>ch.addEventListener('click',()=>{chips.forEach(x=>x.classList.remove('active'));ch.classList.add('active');current=ch.dataset.filter;apply();}));
+function toCSV(rows){const headers=['id','client','product','amount','status','date']; const esc=v=>'"'+String(v).replace(/"/g,'""')+'"'; return [headers.join(','),...rows.map(r=>headers.map(h=>esc(r[h])).join(','))].join('
+');}
+document.getElementById('exportBtn').addEventListener('click',()=>{const csv=toCSV(data); const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='kairos-orders-export.csv'; a.click(); URL.revokeObjectURL(url);});
+document.getElementById('themeBtn').addEventListener('click',()=>document.body.classList.toggle('dark'));
+</script>
+</body></html>
