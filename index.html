@@ -117,8 +117,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.ok{background:#2e6a14}
 .toast.err{background:var(--danger)}
+.variant-selector{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.variant-opt{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;color:var(--muted)}
+.variant-opt.active{background:var(--soft);color:var(--primary);border-color:var(--primary);font-weight:600}
+.variant-opt:disabled{opacity:.4;cursor:not-allowed}
+.coupon-row{display:flex;gap:8px;margin-top:10px}
+.coupon-row input{flex:1;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.orders-scroll{overflow-x:auto}
 @media(max-width:980px){.grid,.split{grid-template-columns:1fr}.prod,.gallery{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr}}
-@media(max-width:680px){.prod,.gallery{grid-template-columns:1fr}.stickycart{right:12px;bottom:12px}}
+@media(max-width:680px){.prod,.gallery{grid-template-columns:1fr}.stickycart{right:12px;bottom:12px;padding:12px 14px;font-size:14px}.nav{gap:10px;font-size:13px}.h1{font-size:1.9rem}.sec{padding:28px 0}.hero{padding:28px 0}.container{width:min(1180px,calc(100% - 20px))}.card,.box{padding:16px}.btn,.btn2{padding:11px 14px;font-size:14px}.modal{padding:10px}.modal-inner{border-radius:18px;max-height:94vh}.modal-head{padding:14px 16px}.modal-body{padding:14px 16px}.modal-foot{padding:10px 16px}.drawer{width:100%}.drawer header,.drawer .body,.drawer .foot{padding:14px 16px}.line{flex-wrap:wrap}.line .row-total{width:100%;text-align:right}}
+@media(max-width:380px){.actions{flex-direction:column;align-items:stretch}.actions .btn,.actions .btn2{width:100%}.form{grid-template-columns:1fr !important}.status-chain{gap:6px}.sc{min-width:90px;font-size:12px;padding:8px 6px}.stickycart .count{min-width:18px;padding:1px 6px}}
 </style>
 </head>
 <body>
@@ -127,6 +135,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   <nav class="nav">
     <a href="#catalogue">Produits</a>
     <a href="#suivi">Suivi</a>
+    <a href="#mes-commandes">Mes commandes</a>
     <a href="#avis">Avis</a>
     <a href="#retours">Retours</a>
     <a href="/admistration">Administration</a>
@@ -183,6 +192,26 @@ button,input,select,textarea{font:inherit;color:inherit}
         <p class="small">Vos commandes enregistrées sur cet appareil.</p>
         <div id="recentOrders" class="timeline"></div>
       </div>
+    </div>
+  </section>
+
+  <section class="sec" id="mes-commandes">
+    <div class="box">
+      <h2>Mes commandes</h2>
+      <p class="small">Retrouvez toutes vos commandes grâce à votre téléphone ou email. Un code de vérification à 6 chiffres vous sera communiqué.</p>
+      <form id="myOrdersForm" class="track-form" style="margin-top:10px">
+        <input id="myOrdersTarget" placeholder="Téléphone ou email utilisé lors de la commande" required>
+        <button class="btn" type="submit">Envoyer le code</button>
+      </form>
+      <div id="otpBox" style="margin-top:12px;display:none">
+        <form id="otpForm" class="track-form">
+          <input id="otpInput" placeholder="Code à 6 chiffres" inputmode="numeric" pattern="\d{6}" required>
+          <button class="btn" type="submit">Vérifier</button>
+          <button class="btn btn2" type="button" id="otpCancel">Annuler</button>
+        </form>
+        <p class="small" id="otpHint" style="margin-top:8px"></p>
+      </div>
+      <div id="myOrdersList" class="timeline" style="margin-top:14px"></div>
     </div>
   </section>
 
@@ -256,6 +285,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 <footer class="footer"><div class="container">© <span id="year"></span> Kairos Distributions — Commandez, payez, suivez en toute simplicité.</div></footer>
 
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="assets/kairos-store.js"></script>
 <script src="assets/kairos-shop.js"></script>
 </body>

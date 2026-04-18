@@ -13,9 +13,11 @@
     category: 'all',
     search: '',
     currentProduct: null,
+    currentVariantId: '',
     checkoutStep: 1,
-    checkoutData: { customer: {}, paymentMethod: 'cash', notes: '' },
-    lastOrder: null
+    checkoutData: { customer: {}, paymentMethod: 'cash', notes: '', couponCode: '', zoneId: '' },
+    lastOrder: null,
+    myOrders: { target: '', verified: false }
   };
 
   /* --------------- toasts --------------- */
@@ -109,21 +111,34 @@
     const p = S.getProduct(id);
     if (!p) return;
     state.currentProduct = id;
+    const variants = Array.isArray(p.variants) ? p.variants : [];
+    state.currentVariantId = variants.length ? variants[0].id : '';
     $('#pmTitle').textContent = p.name;
     const effective = S.effectivePrice(p);
     const hasPromo = Number(p.promo) > 0;
     const img = p.image ? `<div class="ph" style="height:220px;border-radius:16px;background-image:url('${escapeAttr(p.image)}')"></div>` : `<div class="ph" style="height:220px;border-radius:16px"></div>`;
+    const variantHtml = variants.length ? `
+      <div style="margin-top:14px">
+        <label class="small">Variante</label>
+        <div class="variant-selector" id="pmVariants">
+          ${variants.map(v => `<button type="button" class="variant-opt ${v.id === state.currentVariantId ? 'active' : ''}" data-vid="${escapeAttr(v.id)}" ${v.stock <= 0 ? 'disabled' : ''}>${escapeHtml(v.name)}${v.priceDelta ? ' (+' + S.fmtMoney(v.priceDelta) + ')' : ''}${v.stock <= 0 ? ' — rupture' : ''}</button>`).join('')}
+        </div>
+      </div>` : '';
+    const stockDisplay = variants.length
+      ? (variants.find(v => v.id === state.currentVariantId)?.stock || 0)
+      : (Number(p.stock) || 0);
     $('#pmBody').innerHTML = `
       ${img}
       <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <span class="pill">${escapeHtml(p.category)}</span>
-        <span class="small">Stock: ${Number(p.stock) || 0}</span>
+        <span class="small" id="pmStock">Stock: ${stockDisplay}</span>
       </div>
       <p style="margin-top:10px">${escapeHtml(p.description || 'Aucune description.')}</p>
-      <div class="price-row" style="margin-top:10px">
+      <div class="price-row" style="margin-top:10px" id="pmPriceRow">
         <span class="price" style="font-size:1.4rem">${S.fmtMoney(effective)}</span>
         ${hasPromo ? `<span class="price-old">${S.fmtMoney(p.price)}</span><span class="promo-badge">-${p.promo}%</span>` : ''}
       </div>
+      ${variantHtml}
       <div style="margin-top:14px;display:flex;align-items:center;gap:12px">
         <label class="small">Quantité</label>
         <div class="qty">
@@ -133,11 +148,30 @@
         </div>
       </div>`;
     let qty = 1;
+    const getStock = () => variants.length ? (variants.find(v => v.id === state.currentVariantId)?.stock || 0) : (Number(p.stock) || 0);
+    const refreshPrice = () => {
+      const v = variants.find(x => x.id === state.currentVariantId);
+      const price = effective + (v ? Number(v.priceDelta) || 0 : 0);
+      $('#pmPriceRow').innerHTML = `
+        <span class="price" style="font-size:1.4rem">${S.fmtMoney(price)}</span>
+        ${hasPromo ? `<span class="price-old">${S.fmtMoney(p.price + (v ? Number(v.priceDelta) || 0 : 0))}</span><span class="promo-badge">-${p.promo}%</span>` : ''}`;
+      $('#pmStock').textContent = 'Stock: ' + getStock();
+    };
+    if (variants.length) {
+      $$('#pmVariants .variant-opt').forEach(b => b.addEventListener('click', () => {
+        if (b.disabled) return;
+        state.currentVariantId = b.dataset.vid;
+        $$('#pmVariants .variant-opt').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        qty = 1; $('#pmQty').textContent = qty;
+        refreshPrice();
+      }));
+    }
     $('#pmMinus').onclick = () => { qty = Math.max(1, qty - 1); $('#pmQty').textContent = qty; };
-    $('#pmPlus').onclick = () => { qty = Math.min(Number(p.stock) || 99, qty + 1); $('#pmQty').textContent = qty; };
+    $('#pmPlus').onclick = () => { qty = Math.min(getStock() || 99, qty + 1); $('#pmQty').textContent = qty; };
     $('#pmAdd').onclick = () => {
-      if (Number(p.stock) <= 0) { toast('Rupture de stock', 'err'); return; }
-      S.addToCart(id, qty);
+      if (getStock() <= 0) { toast('Rupture de stock', 'err'); return; }
+      S.addToCart(id, qty, state.currentVariantId);
       toast('Ajouté au panier', 'ok');
       closeModals();
     };
@@ -159,7 +193,7 @@
       const p = S.getProduct(it.productId);
       const img = p && p.image ? `style="background-image:url('${escapeAttr(p.image)}')"` : '';
       return `
-        <div class="line" data-id="${it.productId}">
+        <div class="line" data-id="${it.productId}" data-vid="${escapeAttr(it.variantId || '')}">
           <div class="thumb" ${img}></div>
           <div class="info">
             <strong>${escapeHtml(it.name)}</strong>
@@ -178,10 +212,11 @@
     }).join('');
     $$('.line', body).forEach(line => {
       const id = line.dataset.id;
-      const item = sum.items.find(i => i.productId === id);
-      line.querySelector('[data-q="-"]').onclick = () => S.updateCartQty(id, item.qty - 1);
-      line.querySelector('[data-q="+"]').onclick = () => S.updateCartQty(id, item.qty + 1);
-      line.querySelector('[data-rm]').onclick = () => S.removeFromCart(id);
+      const vid = line.dataset.vid || '';
+      const item = sum.items.find(i => i.productId === id && (i.variantId || '') === vid);
+      line.querySelector('[data-q="-"]').onclick = () => S.updateCartQty(id, item.qty - 1, vid);
+      line.querySelector('[data-q="+"]').onclick = () => S.updateCartQty(id, item.qty + 1, vid);
+      line.querySelector('[data-rm]').onclick = () => S.removeFromCart(id, vid);
     });
     const free = sum.delivery === 0;
     foot.innerHTML = `
@@ -243,19 +278,30 @@
 
     if (state.checkoutStep === 2) {
       title.textContent = 'Étape 2/3 · Livraison';
+      const zones = S.getZones();
+      const currentZone = state.checkoutData.zoneId;
+      const sum2 = S.cartSummary({ zoneId: currentZone });
       body.innerHTML = `
         <div class="form">
           <div class="full"><label>Adresse</label><input id="coAddr" placeholder="Rue, quartier, repère" value="${escapeAttr(state.checkoutData.customer.address || '')}" required></div>
           <div><label>Ville</label><input id="coCity" value="${escapeAttr(state.checkoutData.customer.city || '')}" required></div>
           <div><label>Pays</label><input id="coCountry" value="${escapeAttr(state.checkoutData.customer.country || 'Sénégal')}"></div>
+          <div class="full">
+            <label>Zone de livraison</label>
+            <select id="coZone">
+              <option value="">Tarif standard (${S.fmtMoney(settings.deliveryFee)})</option>
+              ${zones.map(z => `<option value="${escapeAttr(z.id)}" ${currentZone === z.id ? 'selected' : ''}>${escapeHtml(z.name)} — ${S.fmtMoney(z.fee)}</option>`).join('')}
+            </select>
+          </div>
           <div class="full"><label>Notes de livraison (optionnel)</label><textarea id="coNotes">${escapeHtml(state.checkoutData.notes || '')}</textarea></div>
         </div>
         <div class="box" style="margin-top:14px">
-          <div class="sum-line"><span>Sous-total</span><span>${S.fmtMoney(sum.subtotal)}</span></div>
-          <div class="sum-line"><span>Livraison</span><span>${sum.delivery === 0 ? 'Offerte' : S.fmtMoney(sum.delivery)}</span></div>
-          <div class="sum-line sum-total"><span>Total</span><span>${S.fmtMoney(sum.total)}</span></div>
-          ${sum.delivery > 0 ? `<p class="small" style="margin:8px 0 0">Livraison offerte dès ${S.fmtMoney(settings.freeDeliveryFrom)}.</p>` : ''}
+          <div class="sum-line"><span>Sous-total</span><span>${S.fmtMoney(sum2.subtotal)}</span></div>
+          <div class="sum-line"><span>Livraison${sum2.zone ? ' (' + escapeHtml(sum2.zone.name) + ')' : ''}</span><span>${sum2.delivery === 0 ? 'Offerte' : S.fmtMoney(sum2.delivery)}</span></div>
+          <div class="sum-line sum-total"><span>Total</span><span>${S.fmtMoney(sum2.total)}</span></div>
+          ${sum2.delivery > 0 ? `<p class="small" style="margin:8px 0 0">Livraison offerte dès ${S.fmtMoney(settings.freeDeliveryFrom)}.</p>` : ''}
         </div>`;
+      $('#coZone').addEventListener('change', (e) => { state.checkoutData.zoneId = e.target.value; renderCheckout(); });
       foot.innerHTML = `
         <button class="btn btn2" id="coBack2" type="button">Retour</button>
         <button class="btn" id="coNext2" type="button">Continuer</button>`;
@@ -285,6 +331,8 @@
       if (methods.moov) options.push({ id: 'moov', label: 'Moov Money', desc: 'Réglez via Moov Money après confirmation.' });
       if (methods.card) options.push({ id: 'card', label: 'Carte bancaire', desc: 'Paiement en ligne sécurisé.' });
 
+      const sum3 = S.cartSummary({ zoneId: state.checkoutData.zoneId, couponCode: state.checkoutData.couponCode });
+
       body.innerHTML = `
         <div class="pay-list">
           ${options.map(o => `
@@ -294,16 +342,32 @@
             </label>`).join('')}
         </div>
         <div class="box" style="margin-top:14px">
+          <label class="small">Code promo</label>
+          <div class="coupon-row">
+            <input id="coCoupon" placeholder="Ex: BIENVENUE10" value="${escapeAttr(state.checkoutData.couponCode || '')}">
+            <button class="btn btn2" type="button" id="coCouponApply">Appliquer</button>
+          </div>
+          ${sum3.coupon ? `<p class="small" style="color:var(--success);margin:8px 0 0">Coupon ${escapeHtml(sum3.coupon.code)} appliqué.</p>` : ''}
+          ${sum3.couponError ? `<p class="small" style="color:var(--danger);margin:8px 0 0">${escapeHtml(sum3.couponError)}</p>` : ''}
+        </div>
+        <div class="box" style="margin-top:14px">
           <div class="sum-line"><span>Client</span><span>${escapeHtml(state.checkoutData.customer.firstName + ' ' + state.checkoutData.customer.lastName)}</span></div>
           <div class="sum-line"><span>Téléphone</span><span>${escapeHtml(state.checkoutData.customer.phone)}</span></div>
           <div class="sum-line"><span>Livraison</span><span>${escapeHtml(state.checkoutData.customer.address + ', ' + state.checkoutData.customer.city)}</span></div>
-          <div class="sum-line sum-total"><span>Total à payer</span><span>${S.fmtMoney(sum.total)}</span></div>
+          <div class="sum-line"><span>Sous-total</span><span>${S.fmtMoney(sum3.subtotal)}</span></div>
+          ${sum3.discount > 0 ? `<div class="sum-line" style="color:var(--success)"><span>Remise</span><span>-${S.fmtMoney(sum3.discount)}</span></div>` : ''}
+          <div class="sum-line"><span>Livraison${sum3.zone ? ' (' + escapeHtml(sum3.zone.name) + ')' : ''}</span><span>${sum3.delivery === 0 ? 'Offerte' : S.fmtMoney(sum3.delivery)}</span></div>
+          <div class="sum-line sum-total"><span>Total à payer</span><span>${S.fmtMoney(sum3.total)}</span></div>
         </div>`;
       $$('input[name="pay"]').forEach(r => r.addEventListener('change', () => {
         state.checkoutData.paymentMethod = r.value;
         $$('.pay').forEach(el => el.classList.remove('active'));
         r.closest('.pay').classList.add('active');
       }));
+      $('#coCouponApply').onclick = () => {
+        state.checkoutData.couponCode = $('#coCoupon').value.trim().toUpperCase();
+        renderCheckout();
+      };
       foot.innerHTML = `
         <button class="btn btn2" id="coBack3" type="button">Retour</button>
         <button class="btn" id="coConfirm" type="button">Confirmer la commande</button>`;
@@ -328,12 +392,14 @@
         </div>`;
       foot.innerHTML = `
         <button class="btn btn2" id="coCopy" type="button">Copier le numéro</button>
+        <button class="btn btn2" id="coInvoice" type="button">Facture PDF</button>
         <button class="btn" id="coTrack" type="button">Voir le suivi</button>`;
       $('#coCopy').onclick = () => {
         const txt = `Commande ${o.id} · Suivi ${o.trackingNumber}`;
         if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast('Copié', 'ok'));
         else { window.prompt('Copier:', txt); }
       };
+      $('#coInvoice').onclick = () => downloadInvoice(o);
       $('#coTrack').onclick = () => {
         closeModals();
         $('#trackInput').value = o.id;
@@ -343,14 +409,114 @@
     }
   }
 
+  /* --------------- PDF invoice --------------- */
+  function downloadInvoice(order) {
+    if (!window.jspdf || !window.jspdf.jsPDF) { toast('PDF non disponible', 'err'); return; }
+    const settings = S.getSettings();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 50;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(143, 63, 93);
+    doc.text(settings.storeName || 'Kairos Distributions', 40, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(120);
+    y += 18;
+    doc.text('Facture / Receipt', 40, y);
+
+    doc.setFontSize(10);
+    doc.setTextColor(30);
+    doc.text('N° ' + order.id, pageWidth - 40, 50, { align: 'right' });
+    doc.setTextColor(120);
+    doc.text('Date : ' + S.formatDate(order.createdAt), pageWidth - 40, 66, { align: 'right' });
+    doc.text('Suivi : ' + order.trackingNumber, pageWidth - 40, 82, { align: 'right' });
+
+    y = 120;
+    doc.setDrawColor(234, 217, 213);
+    doc.line(40, y, pageWidth - 40, y);
+    y += 18;
+
+    doc.setTextColor(30);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Client', 40, y);
+    doc.setFont('helvetica', 'normal');
+    y += 14;
+    doc.text((order.customer.firstName || '') + ' ' + (order.customer.lastName || ''), 40, y); y += 12;
+    doc.text(order.customer.phone || '', 40, y); y += 12;
+    if (order.customer.email) { doc.text(order.customer.email, 40, y); y += 12; }
+    doc.text(order.customer.address || '', 40, y); y += 12;
+    doc.text((order.customer.city || '') + ', ' + (order.customer.country || ''), 40, y);
+
+    let yRight = 134;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Paiement', pageWidth - 200, yRight); yRight += 14;
+    doc.setFont('helvetica', 'normal');
+    doc.text(paymentLabel(order.paymentMethod), pageWidth - 200, yRight); yRight += 12;
+    doc.text('Statut : ' + (order.paymentStatus || '-'), pageWidth - 200, yRight); yRight += 12;
+    doc.text('Commande : ' + order.status, pageWidth - 200, yRight);
+
+    y = Math.max(y, yRight) + 30;
+    doc.setDrawColor(234, 217, 213);
+    doc.line(40, y, pageWidth - 40, y);
+    y += 20;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Article', 40, y);
+    doc.text('Qté', 350, y, { align: 'right' });
+    doc.text('PU', 430, y, { align: 'right' });
+    doc.text('Total', pageWidth - 40, y, { align: 'right' });
+    y += 8;
+    doc.line(40, y, pageWidth - 40, y);
+    y += 14;
+    doc.setFont('helvetica', 'normal');
+    (order.items || []).forEach(it => {
+      if (y > 720) { doc.addPage(); y = 50; }
+      const name = String(it.name || '');
+      const lines = doc.splitTextToSize(name, 280);
+      doc.text(lines, 40, y);
+      doc.text(String(it.qty), 350, y, { align: 'right' });
+      doc.text(S.fmtMoney(it.unitPrice), 430, y, { align: 'right' });
+      doc.text(S.fmtMoney(it.lineTotal), pageWidth - 40, y, { align: 'right' });
+      y += Math.max(14, lines.length * 12);
+    });
+
+    y += 10;
+    doc.line(40, y, pageWidth - 40, y);
+    y += 18;
+    const rightX = pageWidth - 40;
+    const labelX = pageWidth - 170;
+    doc.text('Sous-total', labelX, y); doc.text(S.fmtMoney(order.subtotal), rightX, y, { align: 'right' }); y += 14;
+    if (order.discount) { doc.setTextColor(67, 122, 34); doc.text('Remise', labelX, y); doc.text('-' + S.fmtMoney(order.discount), rightX, y, { align: 'right' }); doc.setTextColor(30); y += 14; }
+    doc.text('Livraison' + (order.zone ? ' (' + order.zone.name + ')' : ''), labelX, y); doc.text(order.delivery ? S.fmtMoney(order.delivery) : 'Offerte', rightX, y, { align: 'right' }); y += 18;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Total', labelX, y); doc.text(S.fmtMoney(order.total), rightX, y, { align: 'right' });
+
+    y += 40;
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Merci pour votre commande. Suivez-la sur notre site avec votre numéro de suivi.', 40, y);
+
+    doc.save((order.id || 'facture') + '.pdf');
+    toast('Facture téléchargée', 'ok');
+  }
+
   function confirmOrder() {
-    const sum = S.cartSummary();
+    const sum = S.cartSummary({ zoneId: state.checkoutData.zoneId, couponCode: state.checkoutData.couponCode });
     if (!sum.items.length) { toast('Panier vide', 'err'); return; }
     const payload = {
       customer: state.checkoutData.customer,
-      items: sum.items.map(it => ({ productId: it.productId, name: it.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal })),
+      items: sum.items.map(it => ({ productId: it.productId, variantId: it.variantId || '', name: it.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal })),
       subtotal: sum.subtotal,
       delivery: sum.delivery,
+      discount: sum.discount,
+      coupon: sum.coupon,
+      zone: sum.zone,
       total: sum.total,
       paymentMethod: state.checkoutData.paymentMethod,
       notes: state.checkoutData.notes
@@ -406,9 +572,73 @@
         <div style="margin-top:10px">${items}</div>
         <div class="sum-line sum-total" style="margin-top:10px"><span>Total</span><span>${S.fmtMoney(order.total)}</span></div>
         <div class="small">Paiement : ${paymentLabel(order.paymentMethod)} · ${escapeHtml(order.paymentStatus || '')}</div>
+        <div class="actions" style="margin-top:12px">
+          <button class="btn btn2" type="button" id="trackPdf" data-oid="${escapeAttr(order.id)}">Télécharger la facture PDF</button>
+        </div>
         <div style="margin-top:14px"><strong>Historique</strong></div>
         <div class="timeline">${history}</div>
       </div>`;
+    const pdfBtn = $('#trackPdf');
+    if (pdfBtn) pdfBtn.addEventListener('click', () => { const o = S.getOrder(pdfBtn.dataset.oid); if (o) downloadInvoice(o); });
+  }
+
+  /* --------------- Mes commandes (OTP) --------------- */
+  function requestMyOrdersOtp(e) {
+    e.preventDefault();
+    const target = $('#myOrdersTarget').value.trim();
+    if (!target) { toast('Téléphone ou email requis', 'err'); return; }
+    const orders = S.findOrdersForBuyer(target);
+    if (!orders.length) {
+      toast('Aucune commande trouvée pour ce contact', 'err');
+      return;
+    }
+    const code = S.generateOtp(target);
+    state.myOrders = { target, verified: false };
+    $('#otpBox').style.display = 'block';
+    $('#otpInput').value = '';
+    $('#otpInput').focus();
+    $('#otpHint').innerHTML = 'Un code a été envoyé pour <strong>' + escapeHtml(target) + '</strong>. En démo, voir le dashboard admin ou : <code style="font-family:monospace">' + escapeHtml(code) + '</code>';
+    renderMyOrders([]);
+  }
+  function verifyMyOrdersOtp(e) {
+    e.preventDefault();
+    const code = $('#otpInput').value.trim();
+    if (!S.verifyOtp(state.myOrders.target, code)) { toast('Code invalide ou expiré', 'err'); return; }
+    state.myOrders.verified = true;
+    $('#otpBox').style.display = 'none';
+    const orders = S.findOrdersForBuyer(state.myOrders.target);
+    toast(orders.length + ' commande(s) trouvée(s)', 'ok');
+    renderMyOrders(orders);
+  }
+  function cancelMyOrdersOtp() {
+    state.myOrders = { target: '', verified: false };
+    $('#otpBox').style.display = 'none';
+    $('#myOrdersTarget').value = '';
+    renderMyOrders([]);
+  }
+  function renderMyOrders(orders) {
+    const wrap = $('#myOrdersList');
+    if (!wrap) return;
+    if (!state.myOrders.verified) { wrap.innerHTML = ''; return; }
+    if (!orders || !orders.length) { wrap.innerHTML = '<div class="small">Aucune commande.</div>'; return; }
+    wrap.innerHTML = orders.map(o => `
+      <div class="tl" data-id="${escapeAttr(o.id)}">
+        <strong>${escapeHtml(o.id)}</strong> · ${escapeHtml(o.status)}
+        <time>${escapeHtml(S.formatDate(o.createdAt))} · ${S.fmtMoney(o.total)}</time>
+        <div class="actions" style="margin-top:6px">
+          <button class="btn btn2" type="button" data-track style="padding:6px 12px;font-size:12px">Suivre</button>
+          <button class="btn btn2" type="button" data-pdf style="padding:6px 12px;font-size:12px">Facture PDF</button>
+        </div>
+      </div>`).join('');
+    $$('.tl', wrap).forEach(el => {
+      const id = el.dataset.id;
+      el.querySelector('[data-track]').addEventListener('click', () => {
+        $('#trackInput').value = id;
+        runTrack(id);
+        document.querySelector('#suivi').scrollIntoView({ behavior: 'smooth' });
+      });
+      el.querySelector('[data-pdf]').addEventListener('click', () => { const o = S.getOrder(id); if (o) downloadInvoice(o); });
+    });
   }
 
   function renderRecent() {
@@ -438,6 +668,12 @@
     $$('[data-close]').forEach(el => el.addEventListener('click', closeModals));
     $('#searchInput').addEventListener('input', (e) => { state.search = e.target.value; renderProducts(); });
     $('#trackForm').addEventListener('submit', (e) => { e.preventDefault(); runTrack(); });
+    const myOrdersForm = $('#myOrdersForm');
+    if (myOrdersForm) myOrdersForm.addEventListener('submit', requestMyOrdersOtp);
+    const otpForm = $('#otpForm');
+    if (otpForm) otpForm.addEventListener('submit', verifyMyOrdersOtp);
+    const otpCancel = $('#otpCancel');
+    if (otpCancel) otpCancel.addEventListener('click', cancelMyOrdersOtp);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModals(); });
     window.addEventListener('kairos:cart-change', renderCart);
     window.addEventListener('kairos:products-change', () => { renderCategories(); renderProducts(); });
