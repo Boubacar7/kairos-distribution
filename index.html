@@ -146,10 +146,10 @@ const DEFAULT_PRODUCTS = [
   { id:"confidence-kit", name:"Confidence Kit", category:"Promo", tagline:"Rituel complet beauté + silhouette", price:54000, oldPrice:72000, description:"Coffret signature Kairos. 5 produits hero, livraison offerte.", size:"Coffret 5 produits", rating:5.0, reviews:42, badge:"Signature", image:null, gradient:3 },
 ];
 const DEFAULT_REVIEWS = [
-  { id:1, author:"Aminata D.", city:"Dakar", rating:5, title:"Un vrai coup de cœur", body:"Livraison rapide, emballage soigné et les produits tiennent leurs promesses. La crème Glow Skin est devenue mon indispensable.", product:"Glow Skin Crème", verified:true, date:"12 mars 2026" },
-  { id:2, author:"Fatou N.", city:"Abidjan", rating:5, title:"Résultats visibles", body:"Après 3 semaines de Trim Active, je vois une vraie différence. Le suivi client sur WhatsApp m'a aidée à tenir la routine.", product:"Trim Active Plus", verified:true, date:"28 février 2026" },
-  { id:3, author:"Mariam S.", city:"Bamako", rating:4, title:"Bon rapport qualité/prix", body:"Le pack Lip & Glow est parfait pour découvrir la marque.", product:"Lip & Glow Set", verified:true, date:"15 mars 2026" },
-  { id:4, author:"Awa C.", city:"Cotonou", rating:5, title:"Service impeccable", body:"Équipe réactive, réponse sous 10 minutes en Snap. Je recommande les yeux fermés.", product:"Confidence Kit", verified:true, date:"3 avril 2026" },
+  { id:1, author:"Safi C.", city:"Ouagadougou", rating:5, title:"Un vrai coup de cœur", body:"Livraison rapide, emballage soigné et les produits tiennent leurs promesses. La crème Glow Skin est devenue mon indispensable.", product:"Glow Skin Crème", verified:true, date:"12 mars 2026" },
+  { id:2, author:"Massara C.", city:"Paris", rating:5, title:"Résultats visibles", body:"Après 3 semaines de Trim Active, je vois une vraie différence. Le suivi client sur WhatsApp m'a aidée à tenir la routine.", product:"Trim Active Plus", verified:true, date:"28 février 2026" },
+  { id:3, author:"Banfora Girl.", city:"Montréal", rating:4, title:"Bon rapport qualité/prix", body:"Le pack Lip & Glow est parfait pour découvrir la marque.", product:"Lip & Glow Set", verified:true, date:"15 mars 2026" },
+  { id:4, author:"Kôkô Girl.", city:"Cotonou", rating:5, title:"Service impeccable", body:"Équipe réactive, réponse sous 10 minutes en Snap. Je recommande les yeux fermés.", product:"Confidence Kit", verified:true, date:"3 avril 2026" },
 ];
 const DEFAULT_GALLERY = [null, null, null, null, null, null, null, null];
 
@@ -659,7 +659,7 @@ function Footer({ setScreen }) {
           <div>
             <div className="display" style={{fontSize:28,marginBottom:12}}>Kairos Distributions</div>
             <p style={{fontSize:13,color:"var(--muted-2)",lineHeight:1.5,maxWidth:320}}>
-              Beauté, silhouette et confiance. Expédition partout en Afrique de l'Ouest.
+              Beauté, silhouette et confiance. Expédition partout dans le monde.
             </p>
           </div>
           <div className="col gap-10">
@@ -1018,7 +1018,7 @@ function ReviewEditor({ review, onClose, onSave, onDelete }) {
           <div className="row gap-10">
             <div style={{flex:1}}>
               <span className="label-sm">Nom</span>
-              <input className="input" value={r.author} onChange={(e)=>upd("author", e.target.value)} placeholder="Aminata D."/>
+              <input className="input" value={r.author} onChange={(e)=>upd("author", e.target.value)} placeholder="Safi C."/>
             </div>
             <div style={{flex:1}}>
               <span className="label-sm">Ville</span>
