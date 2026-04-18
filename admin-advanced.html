@@ -113,9 +113,10 @@ textarea{min-height:80px;resize:vertical}
     <h2>Administration Kairos</h2>
     <p class="small">Connexion requise pour accéder à la gestion.</p>
     <form id="loginForm" style="margin-top:16px;display:grid;gap:12px">
+      <div><label>Utilisateur</label><input id="loginUser" value="admin" required></div>
       <div><label>Mot de passe</label><input id="loginPwd" type="password" required autofocus></div>
       <button class="btn primary" type="submit">Se connecter</button>
-      <p class="small" id="loginHint">Mot de passe initial : <code>kairos2026</code> (à modifier dans Réglages).</p>
+      <p class="small" id="loginHint">Identifiants initiaux : <code>admin</code> / <code>kairos2026</code> (à modifier dans Réglages).</p>
     </form>
   </div>
 </div>
@@ -128,12 +129,17 @@ textarea{min-height:80px;resize:vertical}
       <a href="#dashboard" class="active">Dashboard</a>
       <a href="#orders">Commandes</a>
       <a href="#products">Produits</a>
-      <a href="#sales">Ventes</a>
+      <a href="#coupons">Coupons</a>
+      <a href="#zones">Zones</a>
+      <a href="#users">Utilisateurs</a>
+      <a href="#activity">Activité</a>
       <a href="#settings">Réglages</a>
     </nav>
     <div class="actions">
       <a class="btn" href="/">Boutique</a>
+      <button class="btn" id="pushBtn" type="button" title="Activer les notifications">🔔</button>
       <button class="btn" id="exportBtn" type="button">Export CSV</button>
+      <span class="small" id="sessionLabel" style="align-self:center"></span>
       <button class="btn danger" id="logoutBtn" type="button">Déconnexion</button>
     </div>
   </div>
@@ -151,6 +157,11 @@ textarea{min-height:80px;resize:vertical}
     <div class="panel panel-body">
       <h2>Notifications</h2>
       <div class="notif" id="notifWrap"></div>
+    </div>
+    <div class="panel panel-body">
+      <h2>Codes OTP en attente</h2>
+      <p class="small">Codes générés pour que les clients retrouvent leurs commandes. Communiquez le code par WhatsApp/SMS.</p>
+      <div class="list" id="otpList" style="margin-top:10px"></div>
     </div>
     <div class="panel panel-body">
       <h2>Actions rapides</h2>
@@ -267,6 +278,78 @@ textarea{min-height:80px;resize:vertical}
   </div>
 </section>
 
+<section class="section" id="coupons">
+  <div class="panel panel-body">
+    <div class="toolbar">
+      <div><h2>Codes promo</h2><p>Remises en pourcentage, fixes ou livraison offerte.</p></div>
+      <button class="btn primary" id="newCouponBtn" type="button">+ Nouveau coupon</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table" id="couponsTable">
+        <thead><tr><th>Code</th><th>Type</th><th>Valeur</th><th>Min.</th><th>Expiration</th><th>Utilisations</th><th>Statut</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="zones">
+  <div class="layout">
+    <article class="panel panel-body">
+      <div class="toolbar">
+        <div><h2>Zones de livraison</h2><p>Frais par zone, choisis par le client au checkout.</p></div>
+      </div>
+      <form id="zoneForm" class="form">
+        <input type="hidden" name="id">
+        <div><label>Nom de la zone</label><input name="name" required placeholder="Ex: Dakar centre"></div>
+        <div><label>Frais (FCFA)</label><input name="fee" type="number" min="0" required></div>
+        <div class="full actions">
+          <button class="btn primary" type="submit">Enregistrer</button>
+          <button class="btn" type="button" id="zoneReset">Nouveau</button>
+        </div>
+      </form>
+    </article>
+    <article class="panel panel-body">
+      <h2>Zones existantes</h2>
+      <div class="list" id="zonesList" style="margin-top:12px"></div>
+    </article>
+  </div>
+</section>
+
+<section class="section" id="users">
+  <div class="layout">
+    <article class="panel panel-body">
+      <div class="toolbar">
+        <div><h2>Utilisateurs admin</h2><p>Rôles : owner (tout), manager (commandes/produits), staff (commandes).</p></div>
+      </div>
+      <form id="userForm" class="form">
+        <input type="hidden" name="id">
+        <div><label>Nom d'utilisateur</label><input name="username" required></div>
+        <div><label>Rôle</label><select name="role"><option value="staff">Staff</option><option value="manager">Manager</option><option value="owner">Owner</option></select></div>
+        <div class="full"><label>Mot de passe (laisser vide pour conserver)</label><input name="password" type="password" minlength="6"></div>
+        <div class="full actions">
+          <button class="btn primary" type="submit">Enregistrer</button>
+          <button class="btn" type="button" id="userReset">Nouveau</button>
+        </div>
+      </form>
+    </article>
+    <article class="panel panel-body">
+      <h2>Liste des utilisateurs</h2>
+      <div class="list" id="usersList" style="margin-top:12px"></div>
+    </article>
+  </div>
+</section>
+
+<section class="section" id="activity">
+  <div class="panel panel-body">
+    <div class="toolbar">
+      <div><h2>Journal d'activité</h2><p>Les 500 dernières actions admin et événements commandes.</p></div>
+      <button class="btn" id="clearActivityBtn" type="button">Vider le journal</button>
+    </div>
+    <div class="list" id="activityList"></div>
+  </div>
+</section>
+
 </main>
 
 <footer class="footer container">Kairos Distributions — administration</footer>
@@ -281,19 +364,59 @@ textarea{min-height:80px;resize:vertical}
     </div>
     <form id="productForm" class="modal-body form">
       <input type="hidden" name="id">
+      <input type="hidden" name="image">
       <div class="full"><label>Nom du produit</label><input name="name" required></div>
       <div><label>Catégorie</label><input name="category" list="catList" required><datalist id="catList"></datalist></div>
       <div><label>Prix (FCFA)</label><input name="price" type="number" min="0" required></div>
-      <div><label>Stock</label><input name="stock" type="number" min="0" required></div>
+      <div><label>Stock (base)</label><input name="stock" type="number" min="0" required></div>
       <div><label>Promotion (%)</label><input name="promo" type="number" min="0" max="90" value="0"></div>
       <div><label>Statut</label><select name="status"><option>Publié</option><option>Brouillon</option><option>Rupture</option></select></div>
-      <div class="full"><label>URL image (optionnel)</label><input name="image" placeholder="https://..."></div>
+      <div class="full">
+        <label>Image du produit (JPG/PNG, redimensionnée à 800px)</label>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div id="imgPreview" style="width:96px;height:96px;border-radius:12px;background:var(--surface2);background-size:cover;background-position:center;border:1px solid var(--border)"></div>
+          <input type="file" id="imgFile" accept="image/*" style="flex:1;min-width:180px">
+          <button class="btn" type="button" id="imgClear">Retirer</button>
+        </div>
+        <p class="small" id="imgInfo" style="margin-top:6px"></p>
+      </div>
       <div class="full"><label>Description</label><textarea name="description"></textarea></div>
+      <div class="full">
+        <label>Variantes (taille, couleur, etc.)</label>
+        <div id="variantList" class="list" style="gap:8px"></div>
+        <button class="btn" type="button" id="addVariant" style="margin-top:8px">+ Ajouter une variante</button>
+        <p class="small" style="margin-top:6px">Le stock total est la somme des variantes quand au moins une existe.</p>
+      </div>
     </form>
     <div class="modal-foot">
       <button class="btn danger hidden" id="prodDeleteBtn" type="button">Supprimer</button>
       <button class="btn" data-close type="button">Annuler</button>
       <button class="btn primary" id="prodSaveBtn" type="button">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Coupon modal -->
+<div class="overlay" id="couponOverlay">
+  <div class="modal-inner">
+    <div class="modal-head">
+      <h3 id="couponModalTitle">Nouveau coupon</h3>
+      <button class="close-btn" data-close>&times;</button>
+    </div>
+    <form id="couponForm" class="modal-body form">
+      <input type="hidden" name="originalCode">
+      <div><label>Code</label><input name="code" required placeholder="BIENVENUE10"></div>
+      <div><label>Type</label><select name="type"><option value="percent">Pourcentage</option><option value="fixed">Montant fixe</option><option value="free_shipping">Livraison offerte</option></select></div>
+      <div><label>Valeur</label><input name="value" type="number" min="0" value="0"></div>
+      <div><label>Total minimum</label><input name="minTotal" type="number" min="0" value="0"></div>
+      <div><label>Expiration (optionnel)</label><input name="expiresAt" type="date"></div>
+      <div><label>Limite d'utilisation (0 = illimité)</label><input name="usageLimit" type="number" min="0" value="0"></div>
+      <div class="full"><label style="display:flex;gap:8px;align-items:center;color:var(--text);font-weight:500"><input type="checkbox" name="active" style="width:auto" checked> Actif</label></div>
+    </form>
+    <div class="modal-foot">
+      <button class="btn danger hidden" id="couponDeleteBtn" type="button">Supprimer</button>
+      <button class="btn" data-close type="button">Annuler</button>
+      <button class="btn primary" id="couponSaveBtn" type="button">Enregistrer</button>
     </div>
   </div>
 </div>

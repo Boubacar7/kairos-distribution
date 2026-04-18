@@ -7,7 +7,7 @@
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 
-  const state = { orderFilter: 'all', orderSearch: '' };
+  const state = { orderFilter: 'all', orderSearch: '', productVariants: [], currentOrderIds: [] };
 
   /* ---------- toasts ---------- */
   function toast(msg, kind) {
@@ -27,11 +27,24 @@
     if (S.adminIsLogged()) showApp(); else showLogin();
     $('#loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      const ok = S.adminLogin($('#loginPwd').value);
+      const user = $('#loginUser').value.trim() || 'admin';
+      const pwd = $('#loginPwd').value;
+      const ok = S.adminLogin(user, pwd);
       if (ok) { $('#loginPwd').value = ''; showApp(); toast('Bienvenue', 'ok'); }
-      else toast('Mot de passe incorrect', 'err');
+      else toast('Identifiants incorrects', 'err');
     });
     $('#logoutBtn').addEventListener('click', () => { S.adminLogout(); showLogin(); });
+  }
+  function updateSessionLabel() {
+    const u = S.currentUser();
+    const lbl = $('#sessionLabel');
+    if (!lbl) return;
+    lbl.textContent = u ? (u.username + ' · ' + u.role) : '';
+  }
+  function requireRole(roles) {
+    const u = S.currentUser();
+    if (!u) return false;
+    return !roles || (Array.isArray(roles) ? roles : [roles]).indexOf(u.role) >= 0;
   }
 
   /* ---------- utilities ---------- */
@@ -246,6 +259,7 @@
     const form = $('#productForm');
     form.reset();
     $('#prodDeleteBtn').classList.toggle('hidden', !id);
+    state.productVariants = [];
     if (id) {
       const p = S.getProduct(id);
       if (!p) return;
@@ -259,33 +273,112 @@
       form.status.value = p.status || 'Publié';
       form.image.value = p.image || '';
       form.description.value = p.description || '';
+      state.productVariants = (p.variants || []).map(v => ({ ...v }));
     } else {
       $('#prodModalTitle').textContent = 'Nouveau produit';
       form.id.value = '';
       form.status.value = 'Publié';
       form.promo.value = 0;
+      form.image.value = '';
     }
+    updateImagePreview(form.image.value);
+    renderVariantList();
+    $('#imgFile').value = '';
     $('#productOverlay').classList.add('open');
+  }
+
+  function updateImagePreview(src) {
+    const p = $('#imgPreview');
+    if (!p) return;
+    if (src) p.style.backgroundImage = `url('${src.replace(/'/g, "\\'")}')`;
+    else p.style.backgroundImage = '';
+    const info = $('#imgInfo');
+    if (info) info.textContent = src ? (Math.round((src.length * 3 / 4) / 1024) + ' ko environ') : 'Aucune image sélectionnée.';
+  }
+
+  function renderVariantList() {
+    const wrap = $('#variantList');
+    if (!wrap) return;
+    if (!state.productVariants.length) { wrap.innerHTML = '<div class="item small">Aucune variante. Le produit utilisera le stock de base.</div>'; return; }
+    wrap.innerHTML = state.productVariants.map((v, i) => `
+      <div class="item" data-i="${i}" style="display:grid;grid-template-columns:1fr 1fr 110px 90px 40px;gap:8px;align-items:center">
+        <input data-field="name" value="${esc(v.name || '')}" placeholder="Nom (ex: Rouge)">
+        <input data-field="attr" value="${esc(attrToString(v.attributes))}" placeholder="Couleur:Rouge, Taille:M">
+        <input data-field="priceDelta" type="number" value="${v.priceDelta || 0}" placeholder="+ prix">
+        <input data-field="stock" type="number" value="${v.stock || 0}" min="0" placeholder="stock">
+        <button type="button" class="btn danger" data-rm style="padding:6px 10px;min-height:auto">×</button>
+      </div>`).join('');
+    $$('#variantList .item').forEach(row => {
+      const i = Number(row.dataset.i);
+      $$('input', row).forEach(inp => inp.addEventListener('input', () => {
+        const v = state.productVariants[i];
+        const f = inp.dataset.field;
+        if (f === 'name') v.name = inp.value;
+        else if (f === 'attr') v.attributes = parseAttr(inp.value);
+        else if (f === 'priceDelta') v.priceDelta = Number(inp.value) || 0;
+        else if (f === 'stock') v.stock = Math.max(0, Number(inp.value) || 0);
+      }));
+      row.querySelector('[data-rm]').addEventListener('click', () => {
+        state.productVariants.splice(i, 1);
+        renderVariantList();
+      });
+    });
+  }
+
+  function attrToString(a) {
+    if (!a || typeof a !== 'object') return '';
+    return Object.keys(a).map(k => k + ':' + a[k]).join(', ');
+  }
+  function parseAttr(s) {
+    const out = {};
+    String(s || '').split(',').forEach(part => {
+      const [k, v] = part.split(':').map(x => (x || '').trim());
+      if (k && v) out[k] = v;
+    });
+    return out;
   }
 
   function saveProduct() {
     const form = $('#productForm');
+    const variants = state.productVariants.filter(v => v.name).map(v => ({
+      id: v.id || S.uid('v'),
+      name: v.name,
+      attributes: v.attributes || {},
+      priceDelta: Number(v.priceDelta) || 0,
+      stock: Math.max(0, Number(v.stock) || 0)
+    }));
+    const variantStock = variants.reduce((s, v) => s + v.stock, 0);
     const data = {
       id: form.id.value || undefined,
       name: form.name.value.trim(),
       category: form.category.value.trim(),
       price: Number(form.price.value) || 0,
-      stock: Number(form.stock.value) || 0,
+      stock: variants.length ? variantStock : Number(form.stock.value) || 0,
       promo: Number(form.promo.value) || 0,
       status: form.status.value,
       image: form.image.value.trim(),
-      description: form.description.value.trim()
+      description: form.description.value.trim(),
+      variants: variants
     };
     if (!data.name || !data.category || data.price < 0) { toast('Champs invalides', 'err'); return; }
     S.saveProduct(data);
+    S.logActivity('product_save', 'Produit ' + data.name + ' enregistré');
     toast('Produit enregistré', 'ok');
     closeOverlays();
     renderAll();
+  }
+
+  async function handleImageFile(file) {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { toast('Fichier image invalide', 'err'); return; }
+    try {
+      const dataUrl = await S.resizeImage(file, 800, 0.82);
+      $('#productForm').image.value = dataUrl;
+      updateImagePreview(dataUrl);
+      toast('Image redimensionnée', 'ok');
+    } catch (e) {
+      toast('Erreur image', 'err');
+    }
   }
 
   /* ---------- settings ---------- */
@@ -335,7 +428,185 @@
     else toast('Ancien mot de passe invalide', 'err');
   }
 
-  /* ---------- csv export ---------- */
+  /* ---------- coupons ---------- */
+  function renderCoupons() {
+    const list = S.getCoupons();
+    const tbody = $('#couponsTable tbody');
+    if (!tbody) return;
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:18px;color:var(--muted)">Aucun coupon.</td></tr>'; return; }
+    const typeLabel = { percent: '%', fixed: 'FCFA', free_shipping: 'Livraison' };
+    tbody.innerHTML = list.map(c => `
+      <tr data-code="${esc(c.code)}">
+        <td><strong>${esc(c.code)}</strong></td>
+        <td>${esc(typeLabel[c.type] || c.type)}</td>
+        <td>${c.type === 'free_shipping' ? '—' : (c.type === 'percent' ? (c.value + '%') : S.fmtMoney(c.value || 0))}</td>
+        <td>${S.fmtMoney(c.minTotal || 0)}</td>
+        <td>${c.expiresAt ? esc(c.expiresAt) : '—'}</td>
+        <td>${c.used || 0}${c.usageLimit ? ' / ' + c.usageLimit : ''}</td>
+        <td><span class="badge ${c.active ? 'b-shipped' : 'b-cancel'}">${c.active ? 'Actif' : 'Inactif'}</span></td>
+        <td><button class="btn" data-edit-c="${esc(c.code)}" type="button">Modifier</button></td>
+      </tr>`).join('');
+    $$('[data-edit-c]', tbody).forEach(b => b.addEventListener('click', () => openCouponModal(b.dataset.editC)));
+  }
+  function openCouponModal(code) {
+    const form = $('#couponForm');
+    form.reset();
+    $('#couponDeleteBtn').classList.toggle('hidden', !code);
+    if (code) {
+      const c = S.getCoupons().find(x => x.code === code);
+      if (!c) return;
+      $('#couponModalTitle').textContent = 'Modifier : ' + c.code;
+      form.originalCode.value = c.code;
+      form.code.value = c.code;
+      form.type.value = c.type || 'percent';
+      form.value.value = c.value || 0;
+      form.minTotal.value = c.minTotal || 0;
+      form.expiresAt.value = c.expiresAt || '';
+      form.usageLimit.value = c.usageLimit || 0;
+      form.active.checked = c.active !== false;
+    } else {
+      $('#couponModalTitle').textContent = 'Nouveau coupon';
+      form.originalCode.value = '';
+      form.type.value = 'percent';
+      form.active.checked = true;
+    }
+    $('#couponOverlay').classList.add('open');
+  }
+  function saveCoupon() {
+    const f = $('#couponForm');
+    const original = f.originalCode.value;
+    const data = {
+      code: f.code.value.trim().toUpperCase(),
+      type: f.type.value,
+      value: Number(f.value.value) || 0,
+      minTotal: Number(f.minTotal.value) || 0,
+      expiresAt: f.expiresAt.value || null,
+      usageLimit: Number(f.usageLimit.value) || 0,
+      active: f.active.checked
+    };
+    if (!data.code) { toast('Code obligatoire', 'err'); return; }
+    if (original && original !== data.code) S.deleteCoupon(original);
+    S.saveCoupon(data);
+    toast('Coupon enregistré', 'ok');
+    closeOverlays();
+    renderCoupons();
+  }
+
+  /* ---------- zones ---------- */
+  function renderZones() {
+    const list = S.getZones();
+    const wrap = $('#zonesList');
+    if (!wrap) return;
+    if (!list.length) { wrap.innerHTML = '<div class="item small">Aucune zone.</div>'; return; }
+    wrap.innerHTML = list.map(z => `
+      <div class="item" data-id="${esc(z.id)}" style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+        <div><strong>${esc(z.name)}</strong><div class="small">${S.fmtMoney(z.fee)}</div></div>
+        <div class="actions">
+          <button class="btn" data-edit-z type="button">Modifier</button>
+          <button class="btn danger" data-del-z type="button">Supprimer</button>
+        </div>
+      </div>`).join('');
+    $$('[data-edit-z]', wrap).forEach(b => b.addEventListener('click', () => {
+      const z = S.getZones().find(x => x.id === b.closest('[data-id]').dataset.id);
+      if (!z) return;
+      const f = $('#zoneForm');
+      f.id.value = z.id; f.name.value = z.name; f.fee.value = z.fee;
+      $('#zones').scrollIntoView({ behavior: 'smooth' });
+    }));
+    $$('[data-del-z]', wrap).forEach(b => b.addEventListener('click', () => {
+      const id = b.closest('[data-id]').dataset.id;
+      if (confirm('Supprimer cette zone ?')) { S.deleteZone(id); renderZones(); toast('Zone supprimée', 'ok'); }
+    }));
+  }
+  function saveZoneForm(e) {
+    e.preventDefault();
+    const f = e.target;
+    const z = { id: f.id.value || undefined, name: f.name.value.trim(), fee: Number(f.fee.value) || 0 };
+    if (!z.name) { toast('Nom obligatoire', 'err'); return; }
+    S.saveZone(z);
+    f.reset();
+    toast('Zone enregistrée', 'ok');
+    renderZones();
+  }
+
+  /* ---------- users ---------- */
+  function renderUsers() {
+    const list = S.getUsers();
+    const wrap = $('#usersList');
+    if (!wrap) return;
+    const me = S.currentUser();
+    if (!list.length) { wrap.innerHTML = '<div class="item small">Aucun utilisateur.</div>'; return; }
+    wrap.innerHTML = list.map(u => `
+      <div class="item" data-id="${esc(u.id)}" style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+        <div><strong>${esc(u.username)}</strong><div class="small">${esc(u.role)}${me && me.id === u.id ? ' · vous' : ''}</div></div>
+        <div class="actions">
+          <button class="btn" data-edit-u type="button">Modifier</button>
+          <button class="btn danger" data-del-u type="button" ${u.role === 'owner' ? 'disabled' : ''}>Supprimer</button>
+        </div>
+      </div>`).join('');
+    $$('[data-edit-u]', wrap).forEach(b => b.addEventListener('click', () => {
+      const u = S.getUser(b.closest('[data-id]').dataset.id);
+      if (!u) return;
+      const f = $('#userForm');
+      f.id.value = u.id; f.username.value = u.username; f.role.value = u.role; f.password.value = '';
+      $('#users').scrollIntoView({ behavior: 'smooth' });
+    }));
+    $$('[data-del-u]', wrap).forEach(b => b.addEventListener('click', () => {
+      const id = b.closest('[data-id]').dataset.id;
+      if (confirm('Supprimer cet utilisateur ?')) {
+        const ok = S.deleteUser(id);
+        if (!ok) toast('Impossible : dernier owner', 'err');
+        else { renderUsers(); toast('Utilisateur supprimé', 'ok'); }
+      }
+    }));
+  }
+  function saveUserForm(e) {
+    e.preventDefault();
+    const f = e.target;
+    if (!requireRole(['owner'])) { toast('Réservé au owner', 'err'); return; }
+    const id = f.id.value || undefined;
+    const data = { id, username: f.username.value.trim(), role: f.role.value };
+    if (!data.username) { toast('Nom obligatoire', 'err'); return; }
+    if (!id) {
+      if (!f.password.value) { toast('Mot de passe obligatoire', 'err'); return; }
+      data.passwordHash = (function (p) { let h = 0; for (let i = 0; i < p.length; i++) { h = ((h << 5) - h) + p.charCodeAt(i); h |= 0; } return String(h); })(f.password.value);
+    }
+    const saved = S.saveUser(data);
+    if (f.password.value && id) S.setUserPassword(saved.id, f.password.value);
+    f.reset();
+    toast('Utilisateur enregistré', 'ok');
+    renderUsers();
+  }
+
+  /* ---------- activity ---------- */
+  function renderActivity() {
+    const list = S.getActivity();
+    const wrap = $('#activityList');
+    if (!wrap) return;
+    if (!list.length) { wrap.innerHTML = '<div class="item small">Aucune activité.</div>'; return; }
+    wrap.innerHTML = list.slice(0, 100).map(a => `<div class="item"><strong>${esc(a.type)}</strong> — ${esc(a.message)}<div class="small">${esc(S.formatDate(a.at))}</div></div>`).join('');
+  }
+
+  /* ---------- OTP ---------- */
+  function renderOtps() {
+    const list = S.getPendingOtps();
+    const wrap = $('#otpList');
+    if (!wrap) return;
+    if (!list.length) { wrap.innerHTML = '<div class="item small">Aucun code en attente.</div>'; return; }
+    wrap.innerHTML = list.slice(0, 8).map(o => `
+      <div class="item">
+        <strong>${esc(o.target)}</strong>
+        <div style="font-family:monospace;font-size:1.1rem;letter-spacing:.15em">${esc(o.code)}</div>
+        <div class="small">Expire à ${esc(new Date(o.expiresAt).toLocaleTimeString('fr-FR'))}</div>
+      </div>`).join('');
+  }
+
+  /* ---------- push ---------- */
+  async function handlePushToggle() {
+    if (!S.canPush()) { toast('Notifications non supportées', 'err'); return; }
+    const res = await S.requestPush();
+    toast(res === 'granted' ? 'Notifications activées' : 'Notifications refusées', res === 'granted' ? 'ok' : 'err');
+  }
   function exportCSV() {
     const orders = S.getOrders();
     if (!orders.length) { toast('Aucune commande à exporter', 'err'); return; }
@@ -422,18 +693,76 @@
 
     $('#exportBtn').addEventListener('click', exportCSV);
 
-    window.addEventListener('kairos:orders-change', () => { renderOrders(); renderStats(); renderNotifs(); renderKPI(); renderChart(); renderOps(); });
+    // image upload
+    const imgFile = $('#imgFile');
+    if (imgFile) imgFile.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
+    const imgClear = $('#imgClear');
+    if (imgClear) imgClear.addEventListener('click', () => { $('#productForm').image.value = ''; updateImagePreview(''); $('#imgFile').value = ''; });
+
+    // variants
+    const addV = $('#addVariant');
+    if (addV) addV.addEventListener('click', () => {
+      state.productVariants.push({ id: S.uid('v'), name: '', attributes: {}, priceDelta: 0, stock: 0 });
+      renderVariantList();
+    });
+
+    // coupons
+    const newCBtn = $('#newCouponBtn');
+    if (newCBtn) newCBtn.addEventListener('click', () => openCouponModal());
+    const saveCBtn = $('#couponSaveBtn');
+    if (saveCBtn) saveCBtn.addEventListener('click', saveCoupon);
+    const delCBtn = $('#couponDeleteBtn');
+    if (delCBtn) delCBtn.addEventListener('click', () => {
+      const code = $('#couponForm').originalCode.value;
+      if (code && confirm('Supprimer ce coupon ?')) { S.deleteCoupon(code); closeOverlays(); renderCoupons(); toast('Coupon supprimé', 'ok'); }
+    });
+
+    // zones
+    const zForm = $('#zoneForm');
+    if (zForm) zForm.addEventListener('submit', saveZoneForm);
+    const zReset = $('#zoneReset');
+    if (zReset) zReset.addEventListener('click', () => $('#zoneForm').reset());
+
+    // users
+    const uForm = $('#userForm');
+    if (uForm) uForm.addEventListener('submit', saveUserForm);
+    const uReset = $('#userReset');
+    if (uReset) uReset.addEventListener('click', () => $('#userForm').reset());
+
+    // activity
+    const clrA = $('#clearActivityBtn');
+    if (clrA) clrA.addEventListener('click', () => { if (confirm('Vider le journal ?')) { S.clearActivity(); renderActivity(); } });
+
+    // push
+    const pushB = $('#pushBtn');
+    if (pushB) pushB.addEventListener('click', handlePushToggle);
+
+    window.addEventListener('kairos:orders-change', () => { renderOrders(); renderStats(); renderNotifs(); renderKPI(); renderChart(); renderOps(); renderActivity(); });
     window.addEventListener('kairos:products-change', () => { renderProducts(); renderStats(); renderNotifs(); renderOps(); });
     window.addEventListener('kairos:settings-change', loadSettings);
+    window.addEventListener('kairos:coupons-change', renderCoupons);
+    window.addEventListener('kairos:zones-change', renderZones);
+    window.addEventListener('kairos:users-change', renderUsers);
+    window.addEventListener('kairos:activity-change', renderActivity);
+    window.addEventListener('kairos:otp-change', renderOtps);
+
+    // Periodic OTP refresh (expiry)
+    setInterval(renderOtps, 30000);
 
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOverlays(); });
   }
 
   function renderAll() {
+    updateSessionLabel();
     renderStats();
     renderNotifs();
     renderKPI();
     renderChart();
+    renderCoupons();
+    renderZones();
+    renderUsers();
+    renderActivity();
+    renderOtps();
     renderOps();
     renderOrders();
     renderProducts();
