@@ -20,7 +20,14 @@
     USERS: 'kairos_users',
     ACTIVITY: 'kairos_activity',
     OTPS: 'kairos_otps',
-    SESSION: 'kairos_session'
+    SESSION: 'kairos_session',
+    WISHLIST: 'kairos_wishlist',
+    COMPARE: 'kairos_compare',
+    LOYALTY: 'kairos_loyalty',
+    REVIEWS: 'kairos_reviews',
+    OTP_RATE: 'kairos_otp_rate',
+    LOCALE: 'kairos_locale',
+    CURRENCY: 'kairos_currency'
   };
 
   const DEFAULT_PRODUCTS = [
@@ -122,6 +129,39 @@
       h |= 0;
     }
     return String(h);
+  }
+
+  function b64(buf) {
+    const bytes = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
+  function b64ToBuf(s) {
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  async function pbkdf2Hash(password, saltB64) {
+    if (!window.crypto || !crypto.subtle) return null;
+    const enc = new TextEncoder();
+    let salt;
+    if (saltB64) salt = b64ToBuf(saltB64);
+    else { salt = crypto.getRandomValues(new Uint8Array(16)); }
+    const key = await crypto.subtle.importKey('raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 120000, hash: 'SHA-256' }, key, 256);
+    return 'pbkdf2$120000$' + b64(salt) + '$' + b64(bits);
+  }
+  async function verifyPwd(password, stored) {
+    if (!stored) return false;
+    if (stored.startsWith('pbkdf2$')) {
+      const parts = stored.split('$');
+      const salt = parts[2];
+      const computed = await pbkdf2Hash(password, salt);
+      return computed === stored;
+    }
+    return simpleHash(password) === stored;
   }
 
   function read(key, fallback) {
@@ -342,6 +382,9 @@
       if (c) { c.used = (Number(c.used) || 0) + 1; setCoupons(list); }
     }
     clearCart();
+    const pts = pointsForOrder(order.total || 0);
+    const tgt = (order.customer && (order.customer.phone || order.customer.email)) || '';
+    if (tgt && pts > 0) { addLoyaltyPoints(tgt, pts, 'Commande ' + id); order.loyaltyAwarded = pts; }
     logActivity('order_created', 'Commande ' + id + ' créée');
     notifyNewOrder(order);
     return order;
@@ -396,27 +439,36 @@
     setUsers(remaining);
     return true;
   }
-  function setUserPassword(id, newPwd) {
+  async function setUserPassword(id, newPwd) {
     const list = getUsers();
     const u = list.find(x => x.id === id);
     if (!u) return false;
-    u.passwordHash = simpleHash(newPwd);
+    const hash = await pbkdf2Hash(newPwd);
+    u.passwordHash = hash || simpleHash(newPwd);
     setUsers(list);
     return true;
   }
   function getSession() { return read(K.SESSION, null); }
   function setSession(s) { if (s) write(K.SESSION, s); else localStorage.removeItem(K.SESSION); }
 
-  function adminLogin(usernameOrPwd, password) {
-    // Supports legacy single-arg usage
+  async function adminLogin(usernameOrPwd, password) {
     let username, pwd;
     if (password === undefined) { username = 'admin'; pwd = usernameOrPwd; }
     else { username = usernameOrPwd; pwd = password; }
     const users = getUsers();
     const user = users.find(u => u.username.toLowerCase() === String(username).toLowerCase());
     if (!user) return false;
-    if (simpleHash(pwd) !== user.passwordHash) return false;
-    // Mirror legacy admin key for back-compat
+    const ok = await verifyPwd(pwd, user.passwordHash);
+    if (!ok) return false;
+    // Upgrade legacy hash to PBKDF2 opportunistically
+    if (user.passwordHash && !String(user.passwordHash).startsWith('pbkdf2$')) {
+      const newHash = await pbkdf2Hash(pwd);
+      if (newHash) {
+        const list = getUsers();
+        const me = list.find(x => x.id === user.id);
+        if (me) { me.passwordHash = newHash; setUsers(list); }
+      }
+    }
     const a = read(K.ADMIN, DEFAULT_ADMIN);
     a.loggedUntil = Date.now() + 1000 * 60 * 60 * 4;
     write(K.ADMIN, a);
@@ -450,11 +502,12 @@
     const list = Array.isArray(roles) ? roles : [roles];
     return list.indexOf(u.role) >= 0;
   }
-  function adminChangePassword(oldPwd, newPwd) {
+  async function adminChangePassword(oldPwd, newPwd) {
     const u = currentUser();
     if (!u) return false;
-    if (simpleHash(oldPwd) !== u.passwordHash) return false;
-    setUserPassword(u.id, newPwd);
+    const ok = await verifyPwd(oldPwd, u.passwordHash);
+    if (!ok) return false;
+    await setUserPassword(u.id, newPwd);
     logActivity('password_change', 'Mot de passe modifié', u.id);
     return true;
   }
@@ -511,11 +564,14 @@
   function generateOtp(target) {
     target = String(target || '').trim();
     if (!target) return null;
+    const rate = canRequestOtp(target);
+    if (!rate.ok) return { error: rate.reason, wait: rate.wait };
     const code = String(Math.floor(100000 + Math.random() * 900000));
     const list = read(K.OTPS, []).filter(o => o.target !== target);
     list.unshift({ target, code, createdAt: todayISO(), expiresAt: Date.now() + 1000 * 60 * 10, consumed: false });
     if (list.length > 100) list.length = 100;
     write(K.OTPS, list);
+    recordOtpRequest(target);
     dispatch('otp-change');
     logActivity('otp_issued', 'Code OTP généré pour ' + target);
     return code;
@@ -613,6 +669,147 @@
     if (e.key === K.ACTIVITY) dispatch('activity-change');
   });
 
+  /* ---------- wishlist ---------- */
+  function getWishlist() { return read(K.WISHLIST, []); }
+  function isInWishlist(pid) { return getWishlist().includes(pid); }
+  function toggleWishlist(pid) {
+    const list = getWishlist();
+    const idx = list.indexOf(pid);
+    if (idx >= 0) list.splice(idx, 1); else list.push(pid);
+    write(K.WISHLIST, list);
+    dispatch('wishlist-change');
+    return idx < 0;
+  }
+  function clearWishlist() { write(K.WISHLIST, []); dispatch('wishlist-change'); }
+
+  /* ---------- compare ---------- */
+  function getCompare() { return read(K.COMPARE, []); }
+  function isInCompare(pid) { return getCompare().includes(pid); }
+  function toggleCompare(pid) {
+    const list = getCompare();
+    const idx = list.indexOf(pid);
+    if (idx >= 0) list.splice(idx, 1);
+    else {
+      if (list.length >= 4) return { ok: false, reason: 'max' };
+      list.push(pid);
+    }
+    write(K.COMPARE, list);
+    dispatch('compare-change');
+    return { ok: true, added: idx < 0 };
+  }
+  function clearCompare() { write(K.COMPARE, []); dispatch('compare-change'); }
+
+  /* ---------- loyalty (points per order) ---------- */
+  function getLoyalty(target) {
+    const all = read(K.LOYALTY, {});
+    return all[target] || { points: 0, history: [] };
+  }
+  function addLoyaltyPoints(target, points, reason) {
+    if (!target || !points) return;
+    const all = read(K.LOYALTY, {});
+    const cur = all[target] || { points: 0, history: [] };
+    cur.points += points;
+    cur.history.unshift({ ts: Date.now(), points, reason: reason || '' });
+    all[target] = cur;
+    write(K.LOYALTY, all);
+    dispatch('loyalty-change');
+  }
+  function pointsForOrder(totalFcfa) { return Math.floor(totalFcfa / 1000); }
+
+  /* ---------- recommendations ---------- */
+  function recommendProducts(productId, limit) {
+    const products = getProducts().filter(p => p.status !== 'Brouillon' && p.id !== productId);
+    const base = getProduct(productId);
+    if (!base) return products.slice(0, limit || 4);
+    const sameCat = products.filter(p => p.category === base.category);
+    const others = products.filter(p => p.category !== base.category);
+    return sameCat.concat(others).slice(0, limit || 4);
+  }
+
+  /* ---------- reviews ---------- */
+  function getReviews(productId) {
+    const all = read(K.REVIEWS, []);
+    return productId ? all.filter(r => r.productId === productId && r.status === 'Approuvé') : all;
+  }
+  function saveReview(r) {
+    const all = read(K.REVIEWS, []);
+    if (!r.id) r.id = 'rv-' + uid();
+    if (!r.createdAt) r.createdAt = Date.now();
+    if (!r.status) r.status = 'En attente';
+    const i = all.findIndex(x => x.id === r.id);
+    if (i >= 0) all[i] = r; else all.unshift(r);
+    write(K.REVIEWS, all);
+    dispatch('reviews-change');
+    logActivity('review_' + (i >= 0 ? 'update' : 'create'), 'Avis ' + r.id + ' (' + (r.productId || '?') + ')');
+    return r;
+  }
+  function deleteReview(id) {
+    const all = read(K.REVIEWS, []).filter(r => r.id !== id);
+    write(K.REVIEWS, all);
+    dispatch('reviews-change');
+    logActivity('review_delete', 'Avis ' + id + ' supprimé');
+  }
+  function setReviewStatus(id, status) {
+    const all = read(K.REVIEWS, []);
+    const r = all.find(x => x.id === id);
+    if (!r) return;
+    r.status = status;
+    write(K.REVIEWS, all);
+    dispatch('reviews-change');
+    logActivity('review_status', 'Avis ' + id + ' → ' + status);
+  }
+
+  /* ---------- i18n / currency ---------- */
+  const LOCALES = {
+    fr: {
+      add_to_cart: 'Ajouter au panier', buy_now: 'Acheter maintenant', in_stock: 'En stock',
+      out_of_stock: 'Rupture', search: 'Rechercher un produit', checkout: 'Commander',
+      wishlist: 'Favoris', compare: 'Comparer', points: 'points', reviews: 'Avis',
+      recommended: 'Produits recommandés'
+    },
+    en: {
+      add_to_cart: 'Add to cart', buy_now: 'Buy now', in_stock: 'In stock',
+      out_of_stock: 'Out of stock', search: 'Search a product', checkout: 'Checkout',
+      wishlist: 'Wishlist', compare: 'Compare', points: 'points', reviews: 'Reviews',
+      recommended: 'Recommended products'
+    }
+  };
+  const CURRENCIES = {
+    FCFA: { code: 'FCFA', rate: 1, symbol: 'FCFA', suffix: true },
+    EUR:  { code: 'EUR',  rate: 1/655.957, symbol: '€', suffix: false },
+    USD:  { code: 'USD',  rate: 1/600,     symbol: '$', suffix: false }
+  };
+  function getLocale() { try { return localStorage.getItem(K.LOCALE) || 'fr'; } catch (e) { return 'fr'; } }
+  function setLocale(l) { try { localStorage.setItem(K.LOCALE, l); } catch (e) {} dispatch('locale-change'); }
+  function t(key) { const l = LOCALES[getLocale()] || LOCALES.fr; return l[key] || key; }
+  function getCurrency() { try { return localStorage.getItem(K.CURRENCY) || 'FCFA'; } catch (e) { return 'FCFA'; } }
+  function setCurrency(c) { try { localStorage.setItem(K.CURRENCY, c); } catch (e) {} dispatch('currency-change'); }
+  function fmtMoneyLocalized(amount) {
+    const c = CURRENCIES[getCurrency()] || CURRENCIES.FCFA;
+    const converted = amount * c.rate;
+    if (c.code === 'FCFA') return new Intl.NumberFormat('fr-FR').format(Math.round(converted)) + ' ' + c.symbol;
+    return c.symbol + new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(converted);
+  }
+
+  /* ---------- OTP rate limiting ---------- */
+  function canRequestOtp(target) {
+    const all = read(K.OTP_RATE, {});
+    const entry = all[target] || { count: 0, last: 0, windowStart: 0 };
+    const now = Date.now();
+    if (now - entry.windowStart > 3600 * 1000) { entry.count = 0; entry.windowStart = now; }
+    if (now - entry.last < 30 * 1000) return { ok: false, reason: 'cooldown', wait: Math.ceil((30 * 1000 - (now - entry.last)) / 1000) };
+    if (entry.count >= 5) return { ok: false, reason: 'max', wait: Math.ceil((3600 * 1000 - (now - entry.windowStart)) / 60000) };
+    return { ok: true };
+  }
+  function recordOtpRequest(target) {
+    const all = read(K.OTP_RATE, {});
+    const entry = all[target] || { count: 0, last: 0, windowStart: Date.now() };
+    entry.count += 1;
+    entry.last = Date.now();
+    all[target] = entry;
+    write(K.OTP_RATE, all);
+  }
+
   /* ---------- reset ---------- */
   function resetAll() {
     Object.values(K).forEach(k => localStorage.removeItem(k));
@@ -623,7 +820,7 @@
 
   global.KairosStore = {
     K,
-    fmtMoney, formatDate, uid, effectivePrice,
+    fmtMoney, fmtMoneyLocalized, formatDate, uid, effectivePrice,
     getProducts, setProducts, getProduct, saveProduct, deleteProduct,
     getCart, setCart, addToCart, updateCartQty, removeFromCart, clearCart, cartSummary,
     getOrders, setOrders, getOrder, createOrder, updateOrderStatus, updateOrderTracking, deleteOrder,
@@ -634,9 +831,16 @@
     getZones, saveZone, deleteZone,
     logActivity, getActivity, clearActivity,
     generateOtp, verifyOtp, getPendingOtps,
+    canRequestOtp, recordOtpRequest,
     findOrdersForBuyer,
     resizeImage,
     canPush, requestPush, notifyNewOrder,
+    getWishlist, isInWishlist, toggleWishlist, clearWishlist,
+    getCompare, isInCompare, toggleCompare, clearCompare,
+    getLoyalty, addLoyaltyPoints, pointsForOrder,
+    recommendProducts,
+    getReviews, saveReview, deleteReview, setReviewStatus,
+    getLocale, setLocale, t, getCurrency, setCurrency,
     resetAll
   };
 })(window);

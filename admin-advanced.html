@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
 <title>Kairos Administration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -132,6 +135,7 @@ textarea{min-height:80px;resize:vertical}
       <a href="#coupons">Coupons</a>
       <a href="#zones">Zones</a>
       <a href="#users">Utilisateurs</a>
+      <a href="#reviews">Avis</a>
       <a href="#activity">Activité</a>
       <a href="#settings">Réglages</a>
     </nav>
@@ -185,6 +189,14 @@ textarea{min-height:80px;resize:vertical}
         <div class="bars" id="bars"></div>
         <div class="small">Jan · Fév · Mar · Avr · Mai · Juin · Juil · Août · Sep · Oct · Nov · Déc</div>
       </div>
+      <div class="chart" style="margin-top:14px">
+        <strong>Ventes sur 30 jours</strong>
+        <div class="bars" id="barsDaily"></div>
+      </div>
+      <div class="chart" style="margin-top:14px">
+        <strong>Top produits vendus</strong>
+        <div class="list" id="topProducts"></div>
+      </div>
     </article>
     <article class="panel panel-body">
       <h2>Raccourcis opérationnels</h2>
@@ -223,7 +235,11 @@ textarea{min-height:80px;resize:vertical}
     <article class="panel panel-body">
       <div class="toolbar">
         <div><h2>Produits</h2><p>Gérer, ajouter et modifier le catalogue.</p></div>
-        <button class="btn primary" id="newProductBtn" type="button">+ Nouveau</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn2" id="exportProductsCsv" type="button">Export CSV</button>
+          <label class="btn btn2" style="cursor:pointer;margin:0">Import CSV<input id="importProductsCsv" type="file" accept=".csv,text/csv" style="display:none"></label>
+          <button class="btn primary" id="newProductBtn" type="button">+ Nouveau</button>
+        </div>
       </div>
       <div class="prod-list" id="prodList"></div>
     </article>
@@ -246,6 +262,20 @@ textarea{min-height:80px;resize:vertical}
         <div><label>WhatsApp support</label><input name="supportWhatsapp"></div>
         <div><label>Snapchat support</label><input name="supportSnapchat"></div>
         <div><label>Préfixe numéro de suivi</label><input name="trackingPrefix" required></div>
+        <div><label>Langue boutique</label>
+          <select id="settingLocale">
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <div><label>Devise affichage</label>
+          <select id="settingCurrency">
+            <option value="FCFA">FCFA</option>
+            <option value="EUR">Euro (€)</option>
+            <option value="USD">USD ($)</option>
+          </select>
+        </div>
+        <div><label>Seuil alerte stock bas</label><input name="lowStockThreshold" type="number" min="0" value="5"></div>
         <div class="full">
           <label>Méthodes de paiement</label>
           <div style="display:flex;gap:16px;flex-wrap:wrap">
@@ -337,6 +367,21 @@ textarea{min-height:80px;resize:vertical}
       <h2>Liste des utilisateurs</h2>
       <div class="list" id="usersList" style="margin-top:12px"></div>
     </article>
+  </div>
+</section>
+
+<section class="section" id="reviews">
+  <div class="panel panel-body">
+    <div class="toolbar">
+      <div><h2>Modération des avis</h2><p>Approuvez, rejetez ou supprimez les avis soumis.</p></div>
+      <select id="reviewFilter">
+        <option value="">Tous</option>
+        <option value="En attente">En attente</option>
+        <option value="Approuvé">Approuvé</option>
+        <option value="Rejeté">Rejeté</option>
+      </select>
+    </div>
+    <div class="list" id="reviewsListAdmin"></div>
   </div>
 </section>
 
@@ -435,6 +480,7 @@ textarea{min-height:80px;resize:vertical}
 
 <div class="toast-wrap" id="toasts"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="assets/kairos-store.js"></script>
 <script src="assets/kairos-admin.js"></script>
 </body>
