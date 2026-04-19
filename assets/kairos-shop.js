@@ -674,6 +674,8 @@
     if (otpForm) otpForm.addEventListener('submit', verifyMyOrdersOtp);
     const otpCancel = $('#otpCancel');
     if (otpCancel) otpCancel.addEventListener('click', cancelMyOrdersOtp);
+    const themeBtn = $('#themeToggle');
+    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModals(); });
     window.addEventListener('kairos:cart-change', renderCart);
     window.addEventListener('kairos:products-change', () => { renderCategories(); renderProducts(); });
@@ -687,9 +689,26 @@
     if (line) line.innerHTML = `WhatsApp : <strong>${escapeHtml(s.supportWhatsapp)}</strong> · Snapchat : <strong>${escapeHtml(s.supportSnapchat)}</strong>`;
   }
 
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('kairos_theme', next); } catch (e) {}
+    const btn = $('#themeToggle');
+    if (btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+  }
+  function applyTheme() {
+    let t = 'light';
+    try { t = localStorage.getItem('kairos_theme') || 'light'; } catch (e) {}
+    document.documentElement.setAttribute('data-theme', t);
+    const btn = $('#themeToggle');
+    if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
+  }
+
   /* --------------- init --------------- */
   document.addEventListener('DOMContentLoaded', () => {
     $('#year').textContent = new Date().getFullYear();
+    applyTheme();
     bind();
     applySettings();
     renderCategories();
