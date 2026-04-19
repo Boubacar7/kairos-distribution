@@ -249,9 +249,31 @@ button,input,select,textarea{font:inherit;color:inherit}
 
   <section class="sec" id="avis">
     <h2>Avis clients</h2>
-    <div class="split">
-      <div class="review"><strong>★★★★★</strong><p>Livraison rapide et bon service.</p></div>
-      <div class="review"><strong>★★★★☆</strong><p>Le suivi est clair et facile.</p></div>
+    <p class="small">Les avis approuvés par l'équipe sont affichés ci-dessous.</p>
+    <div id="reviewsList" class="split" style="margin-top:12px"></div>
+    <div class="box" style="margin-top:20px">
+      <h3 style="margin-top:0">Laisser un avis</h3>
+      <form id="reviewForm" class="form">
+        <label>Produit
+          <select id="rvProduct" required></select>
+        </label>
+        <label>Note
+          <select id="rvRating" required>
+            <option value="5">★★★★★</option>
+            <option value="4">★★★★☆</option>
+            <option value="3">★★★☆☆</option>
+            <option value="2">★★☆☆☆</option>
+            <option value="1">★☆☆☆☆</option>
+          </select>
+        </label>
+        <label>Nom<input id="rvName" required></label>
+        <label>Contact (téléphone/email)<input id="rvContact" required></label>
+        <label style="grid-column:1/-1">Commentaire<textarea id="rvText" rows="3" required></textarea></label>
+        <label style="grid-column:1/-1">Photo (optionnelle)<input id="rvPhoto" type="file" accept="image/*"></label>
+        <div id="rvPhotoPreview" style="grid-column:1/-1"></div>
+        <button class="btn" type="submit" style="grid-column:1/-1">Envoyer</button>
+        <p class="small" style="grid-column:1/-1">Votre avis sera publié après modération.</p>
+      </form>
     </div>
   </section>
 

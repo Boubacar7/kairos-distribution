@@ -132,6 +132,7 @@ textarea{min-height:80px;resize:vertical}
       <a href="#coupons">Coupons</a>
       <a href="#zones">Zones</a>
       <a href="#users">Utilisateurs</a>
+      <a href="#reviews">Avis</a>
       <a href="#activity">Activité</a>
       <a href="#settings">Réglages</a>
     </nav>
@@ -337,6 +338,21 @@ textarea{min-height:80px;resize:vertical}
       <h2>Liste des utilisateurs</h2>
       <div class="list" id="usersList" style="margin-top:12px"></div>
     </article>
+  </div>
+</section>
+
+<section class="section" id="reviews">
+  <div class="panel panel-body">
+    <div class="toolbar">
+      <div><h2>Modération des avis</h2><p>Approuvez, rejetez ou supprimez les avis soumis.</p></div>
+      <select id="reviewFilter">
+        <option value="">Tous</option>
+        <option value="En attente">En attente</option>
+        <option value="Approuvé">Approuvé</option>
+        <option value="Rejeté">Rejeté</option>
+      </select>
+    </div>
+    <div class="list" id="reviewsListAdmin"></div>
   </div>
 </section>
 

@@ -587,6 +587,38 @@
     wrap.innerHTML = list.slice(0, 100).map(a => `<div class="item"><strong>${esc(a.type)}</strong> — ${esc(a.message)}<div class="small">${esc(S.formatDate(a.at))}</div></div>`).join('');
   }
 
+  /* ---------- reviews moderation ---------- */
+  function renderReviewsAdmin() {
+    const wrap = $('#reviewsListAdmin');
+    if (!wrap) return;
+    const filter = ($('#reviewFilter') && $('#reviewFilter').value) || '';
+    const list = S.K && S.K.REVIEWS ? JSON.parse(localStorage.getItem(S.K.REVIEWS) || '[]') : [];
+    const filtered = filter ? list.filter(r => r.status === filter) : list;
+    if (!filtered.length) { wrap.innerHTML = '<div class="item small">Aucun avis.</div>'; return; }
+    wrap.innerHTML = filtered.map(r => {
+      const prod = S.getProduct(r.productId);
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      return `
+        <div class="item" data-id="${esc(r.id)}">
+          <div><strong>${stars}</strong> · ${esc(r.name)} (${esc(r.contact || '')})</div>
+          <div class="small">${esc(prod ? prod.name : '—')} · ${esc(S.formatDate(new Date(r.createdAt).toISOString()))} · <strong>${esc(r.status)}</strong></div>
+          <p style="margin:6px 0">${esc(r.text)}</p>
+          ${r.photo ? `<img src="${esc(r.photo)}" style="max-width:160px;border-radius:8px">` : ''}
+          <div class="actions" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn" data-a="approve" type="button">Approuver</button>
+            <button class="btn btn2" data-a="reject" type="button">Rejeter</button>
+            <button class="btn btn2" data-a="delete" type="button">Supprimer</button>
+          </div>
+        </div>`;
+    }).join('');
+    $$('.item', wrap).forEach(el => {
+      const id = el.dataset.id;
+      el.querySelector('[data-a="approve"]').addEventListener('click', () => { S.setReviewStatus(id, 'Approuvé'); toast('Avis approuvé', 'ok'); });
+      el.querySelector('[data-a="reject"]').addEventListener('click', () => { S.setReviewStatus(id, 'Rejeté'); toast('Avis rejeté', 'ok'); });
+      el.querySelector('[data-a="delete"]').addEventListener('click', () => { if (confirm('Supprimer cet avis ?')) { S.deleteReview(id); toast('Avis supprimé', 'ok'); } });
+    });
+  }
+
   /* ---------- OTP ---------- */
   function renderOtps() {
     const list = S.getPendingOtps();
@@ -729,6 +761,10 @@
     const uReset = $('#userReset');
     if (uReset) uReset.addEventListener('click', () => $('#userForm').reset());
 
+    // reviews moderation
+    const rvFilter = $('#reviewFilter');
+    if (rvFilter) rvFilter.addEventListener('change', renderReviewsAdmin);
+
     // activity
     const clrA = $('#clearActivityBtn');
     if (clrA) clrA.addEventListener('click', () => { if (confirm('Vider le journal ?')) { S.clearActivity(); renderActivity(); } });
@@ -745,6 +781,7 @@
     window.addEventListener('kairos:users-change', renderUsers);
     window.addEventListener('kairos:activity-change', renderActivity);
     window.addEventListener('kairos:otp-change', renderOtps);
+    window.addEventListener('kairos:reviews-change', renderReviewsAdmin);
 
     // Periodic OTP refresh (expiry)
     setInterval(renderOtps, 30000);
@@ -766,6 +803,7 @@
     renderOps();
     renderOrders();
     renderProducts();
+    renderReviewsAdmin();
     loadSettings();
   }
 

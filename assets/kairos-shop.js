@@ -17,7 +17,8 @@
     checkoutStep: 1,
     checkoutData: { customer: {}, paymentMethod: 'cash', notes: '', couponCode: '', zoneId: '' },
     lastOrder: null,
-    myOrders: { target: '', verified: false }
+    myOrders: { target: '', verified: false },
+    reviewPhoto: ''
   };
 
   /* --------------- toasts --------------- */
@@ -718,6 +719,11 @@
     if (loyaltyForm) loyaltyForm.addEventListener('submit', handleLoyaltyLookup);
     const compareClear = $('#compareClear');
     if (compareClear) compareClear.addEventListener('click', () => { S.clearCompare(); closeModals(); toast('Comparaison vidée', 'ok'); });
+    const reviewForm = $('#reviewForm');
+    if (reviewForm) reviewForm.addEventListener('submit', submitReview);
+    const rvPhoto = $('#rvPhoto');
+    if (rvPhoto) rvPhoto.addEventListener('change', handleReviewPhoto);
+    window.addEventListener('kairos:reviews-change', renderReviews);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModals(); });
     window.addEventListener('kairos:cart-change', renderCart);
     window.addEventListener('kairos:products-change', () => { renderCategories(); renderProducts(); renderWishlist(); });
@@ -814,6 +820,55 @@
       </div>`;
   }
 
+  function renderReviews() {
+    const wrap = $('#reviewsList');
+    if (!wrap) return;
+    const reviews = S.getReviews().slice(0, 20);
+    if (!reviews.length) { wrap.innerHTML = '<div class="small" style="grid-column:1/-1">Aucun avis pour l\'instant.</div>'; return; }
+    wrap.innerHTML = reviews.map(r => {
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      const prod = S.getProduct(r.productId);
+      return `
+        <div class="review">
+          <strong>${stars}</strong>
+          <div style="font-size:12px;color:var(--muted)">${escapeHtml(r.name)} ${prod ? '· ' + escapeHtml(prod.name) : ''}</div>
+          <p>${escapeHtml(r.text)}</p>
+          ${r.photo ? `<div class="ph" style="height:140px;border-radius:12px;background-image:url('${escapeAttr(r.photo)}')"></div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  function populateReviewProducts() {
+    const sel = $('#rvProduct');
+    if (!sel) return;
+    const products = S.getProducts().filter(p => p.status === 'Publié');
+    sel.innerHTML = products.map(p => `<option value="${escapeAttr(p.id)}">${escapeHtml(p.name)}</option>`).join('');
+  }
+
+  function handleReviewPhoto(e) {
+    const file = e.target.files[0];
+    if (!file) { state.reviewPhoto = ''; $('#rvPhotoPreview').innerHTML = ''; return; }
+    S.resizeImage(file, 800, 0.82).then(dataUrl => {
+      state.reviewPhoto = dataUrl;
+      $('#rvPhotoPreview').innerHTML = `<img src="${dataUrl}" style="max-width:160px;border-radius:12px;margin-top:6px">`;
+    }).catch(() => toast('Image invalide', 'err'));
+  }
+
+  function submitReview(e) {
+    e.preventDefault();
+    const productId = $('#rvProduct').value;
+    const rating = Number($('#rvRating').value);
+    const name = $('#rvName').value.trim();
+    const contact = $('#rvContact').value.trim();
+    const text = $('#rvText').value.trim();
+    if (!productId || !name || !text) { toast('Champs requis manquants', 'err'); return; }
+    S.saveReview({ productId, rating, name, contact, text, photo: state.reviewPhoto || '', status: 'En attente' });
+    toast('Merci ! Votre avis sera publié après modération.', 'ok');
+    $('#reviewForm').reset();
+    $('#rvPhotoPreview').innerHTML = '';
+    state.reviewPhoto = '';
+  }
+
   function applySettings() {
     const s = S.getSettings();
     const line = $('#supportLine');
@@ -848,5 +903,7 @@
     renderRecent();
     renderWishlist();
     renderCompareBar();
+    populateReviewProducts();
+    renderReviews();
   });
 })();
