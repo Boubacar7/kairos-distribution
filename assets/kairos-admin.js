@@ -118,6 +118,47 @@
       const h = Math.max(4, Math.round((v / max) * 100));
       return `<span title="${S.fmtMoney(v)}" style="height:${h}%"></span>`;
     }).join('');
+    renderDailyChart();
+    renderTopProducts();
+  }
+
+  function renderDailyChart() {
+    const wrap = $('#barsDaily');
+    if (!wrap) return;
+    const now = new Date();
+    const days = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
+      days.push({ key: d.toDateString(), label: d.getDate() + '/' + (d.getMonth() + 1), total: 0 });
+    }
+    S.getOrders().forEach(o => {
+      if (o.status === 'Annulée') return;
+      const key = new Date(o.createdAt).toDateString();
+      const day = days.find(d => d.key === key);
+      if (day) day.total += (o.total || 0);
+    });
+    const max = Math.max.apply(null, days.map(d => d.total).concat([1]));
+    wrap.innerHTML = days.map(d => {
+      const h = Math.max(4, Math.round((d.total / max) * 100));
+      return `<span title="${d.label}: ${S.fmtMoney(d.total)}" style="height:${h}%"></span>`;
+    }).join('');
+  }
+
+  function renderTopProducts() {
+    const wrap = $('#topProducts');
+    if (!wrap) return;
+    const counts = {};
+    S.getOrders().forEach(o => {
+      if (o.status === 'Annulée') return;
+      (o.items || []).forEach(it => {
+        counts[it.productId] = counts[it.productId] || { name: it.name, qty: 0, revenue: 0 };
+        counts[it.productId].qty += it.qty;
+        counts[it.productId].revenue += it.lineTotal || 0;
+      });
+    });
+    const top = Object.values(counts).sort((a, b) => b.qty - a.qty).slice(0, 5);
+    if (!top.length) { wrap.innerHTML = '<div class="item small">Aucune vente pour l\'instant.</div>'; return; }
+    wrap.innerHTML = top.map(t => `<div class="item"><strong>${esc(t.name)}</strong><div class="small">${t.qty} vendu(s) · ${S.fmtMoney(t.revenue)}</div></div>`).join('');
   }
 
   function renderOps() {
@@ -200,9 +241,13 @@
       <div style="margin-top:14px"><strong>Historique</strong><div class="list" style="margin-top:8px">${history || '<div class="item small">Aucun événement.</div>'}</div></div>`;
     $('#orderModalFoot').innerHTML = `
       <button class="btn danger" id="omDelete" type="button">Supprimer</button>
+      <button class="btn btn2" id="omLabel" type="button">Étiquette d'expédition</button>
+      <button class="btn btn2" id="omInvoice" type="button">Facture PDF</button>
       <button class="btn" data-close type="button">Fermer</button>
       <button class="btn primary" id="omSave" type="button">Enregistrer</button>`;
     $('#orderModalFoot [data-close]').onclick = closeOverlays;
+    $('#omLabel').onclick = () => printShippingLabel(o);
+    $('#omInvoice').onclick = () => downloadAdminInvoice(o);
     $('#omSave').onclick = () => {
       const newStatus = $('#omStatus').value;
       const newTracking = $('#omTracking').value.trim();
@@ -249,10 +294,18 @@
     }).join('');
     $$('[data-edit]', wrap).forEach(btn => btn.addEventListener('click', () => openProductModal(btn.closest('.prow').dataset.id)));
 
-    const low = list.filter(p => Number(p.stock) <= 5);
+    const settings = S.getSettings();
+    const threshold = Number(settings.lowStockThreshold) || 5;
+    const low = list.filter(p => Number(p.stock) <= threshold);
     $('#stockList').innerHTML = low.length
-      ? low.map(p => `<div class="item"><strong>${esc(p.name)}</strong> — ${p.stock} restant(s)</div>`).join('')
+      ? low.map(p => {
+          const critical = Number(p.stock) === 0;
+          return `<div class="item"><strong>${esc(p.name)}</strong> — ${p.stock} restant(s)${critical ? ' <span class="badge badge-danger">Rupture</span>' : ''}</div>`;
+        }).join('')
       : '<div class="item small">Tous les stocks sont corrects.</div>';
+    if (low.length && S.canPush() && Notification.permission === 'granted' && !state.lastStockAlertAt) {
+      try { new Notification('Stock bas', { body: low.length + ' produit(s) sous le seuil' }); state.lastStockAlertAt = Date.now(); } catch (e) {}
+    }
   }
 
   function openProductModal(id) {
@@ -669,6 +722,146 @@
     toast('Export lancé', 'ok');
   }
 
+  /* ---------- product CSV import/export ---------- */
+  function exportProductsCsv() {
+    const products = S.getProducts();
+    const headers = ['id', 'name', 'category', 'price', 'promo', 'stock', 'status', 'description', 'image'];
+    const esc2 = v => {
+      const s = String(v == null ? '' : v).replace(/"/g, '""');
+      return /[",\n;]/.test(s) ? '"' + s + '"' : s;
+    };
+    const rows = products.map(p => headers.map(h => esc2(p[h])).join(','));
+    const csv = [headers.join(',')].concat(rows).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'kairos-products-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Export produits lancé', 'ok');
+  }
+
+  function parseCsv(text) {
+    const lines = text.replace(/\r/g, '').split('\n').filter(Boolean);
+    if (!lines.length) return [];
+    const parseRow = (line) => {
+      const out = []; let cur = ''; let inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (inQ) {
+          if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+          else if (c === '"') inQ = false;
+          else cur += c;
+        } else {
+          if (c === '"') inQ = true;
+          else if (c === ',') { out.push(cur); cur = ''; }
+          else cur += c;
+        }
+      }
+      out.push(cur);
+      return out;
+    };
+    const headers = parseRow(lines[0]);
+    return lines.slice(1).map(line => {
+      const cells = parseRow(line);
+      const obj = {};
+      headers.forEach((h, i) => obj[h.trim()] = cells[i] != null ? cells[i].trim() : '');
+      return obj;
+    });
+  }
+
+  function importProductsCsv(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const rows = parseCsv(ev.target.result);
+        if (!rows.length) { toast('CSV vide', 'err'); return; }
+        if (!confirm('Importer ' + rows.length + ' produit(s) ? Les IDs existants seront mis à jour.')) return;
+        let ok = 0;
+        rows.forEach(r => {
+          if (!r.name) return;
+          S.saveProduct({
+            id: r.id || '',
+            name: r.name,
+            category: r.category || 'Autre',
+            price: Number(r.price) || 0,
+            promo: Number(r.promo) || 0,
+            stock: Number(r.stock) || 0,
+            status: r.status || 'Publié',
+            description: r.description || '',
+            image: r.image || ''
+          });
+          ok++;
+        });
+        toast(ok + ' produit(s) importé(s)', 'ok');
+        e.target.value = '';
+      } catch (err) {
+        toast('Erreur lecture CSV', 'err');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ---------- shipping label / invoice ---------- */
+  function printShippingLabel(order) {
+    if (!order) return;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Étiquette ${order.id}</title>
+      <style>body{font-family:Inter,sans-serif;padding:24px;color:#241919}
+      .label{border:2px solid #000;padding:24px;max-width:420px;border-radius:12px}
+      h1{font-size:22px;margin:0 0 8px}.small{font-size:12px;color:#555}
+      .row{margin:8px 0}.big{font-size:18px;font-weight:700}
+      .trk{font-family:monospace;font-size:20px;letter-spacing:2px;background:#f0eae8;padding:10px;border-radius:6px;text-align:center;margin-top:14px}
+      @media print{.no-print{display:none}}</style></head><body>
+      <div class="label">
+        <h1>Kairos Distributions</h1>
+        <div class="small">Expédition — ${esc(S.formatDate(order.createdAt))}</div>
+        <div class="row big">${esc(order.id)}</div>
+        <div class="row"><strong>À livrer à :</strong></div>
+        <div class="row">${esc(order.customer.firstName)} ${esc(order.customer.lastName)}</div>
+        <div class="row">${esc(order.customer.phone || '')}</div>
+        <div class="row">${esc(order.customer.address || '')}</div>
+        <div class="row">${esc(order.customer.city || '')}, ${esc(order.customer.country || '')}</div>
+        <div class="row"><strong>${(order.items || []).length} article(s)</strong> · Total ${S.fmtMoney(order.total)}</div>
+        <div class="trk">${esc(order.trackingNumber)}</div>
+      </div>
+      <div class="no-print" style="margin-top:16px;text-align:center"><button onclick="window.print()">Imprimer</button></div>
+      </body></html>`;
+    const w = window.open('', '_blank', 'width=480,height=640');
+    if (!w) { toast('Bloqué par le navigateur', 'err'); return; }
+    w.document.write(html); w.document.close();
+    setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 300);
+  }
+
+  function downloadAdminInvoice(order) {
+    if (!order || !window.jspdf) { toast('jsPDF indisponible', 'err'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const settings = S.getSettings();
+    doc.setFontSize(18); doc.text(settings.storeName || 'Kairos Distributions', 15, 20);
+    doc.setFontSize(10); doc.text('Facture N° ' + order.id, 15, 28);
+    doc.text('Date : ' + S.formatDate(order.createdAt), 15, 34);
+    doc.text('Client : ' + (order.customer.firstName || '') + ' ' + (order.customer.lastName || ''), 15, 44);
+    doc.text('Téléphone : ' + (order.customer.phone || ''), 15, 50);
+    doc.text('Adresse : ' + (order.customer.address || ''), 15, 56);
+    doc.text('Ville : ' + (order.customer.city || ''), 15, 62);
+    let y = 78; doc.setFontSize(11); doc.text('Articles', 15, y); y += 6;
+    doc.setFontSize(10);
+    (order.items || []).forEach(i => {
+      doc.text(i.qty + 'x ' + i.name, 15, y);
+      doc.text(S.fmtMoney(i.lineTotal), 180, y, { align: 'right' });
+      y += 6;
+    });
+    y += 4;
+    doc.text('Sous-total : ' + S.fmtMoney(order.subtotal || 0), 180, y, { align: 'right' }); y += 6;
+    if (order.discount) { doc.text('Remise : -' + S.fmtMoney(order.discount), 180, y, { align: 'right' }); y += 6; }
+    doc.text('Livraison : ' + S.fmtMoney(order.delivery || 0), 180, y, { align: 'right' }); y += 6;
+    doc.setFontSize(12); doc.text('TOTAL : ' + S.fmtMoney(order.total || 0), 180, y, { align: 'right' });
+    doc.save('facture-' + order.id + '.pdf');
+  }
+
   /* ---------- overlays ---------- */
   function closeOverlays() { $$('.overlay').forEach(o => o.classList.remove('open')); }
 
@@ -764,6 +957,18 @@
     // reviews moderation
     const rvFilter = $('#reviewFilter');
     if (rvFilter) rvFilter.addEventListener('change', renderReviewsAdmin);
+
+    // products CSV
+    const exportP = $('#exportProductsCsv');
+    if (exportP) exportP.addEventListener('click', exportProductsCsv);
+    const importP = $('#importProductsCsv');
+    if (importP) importP.addEventListener('change', importProductsCsv);
+
+    // locale + currency
+    const locSel = $('#settingLocale');
+    if (locSel) { locSel.value = S.getLocale(); locSel.addEventListener('change', () => { S.setLocale(locSel.value); toast('Langue mise à jour', 'ok'); }); }
+    const curSel = $('#settingCurrency');
+    if (curSel) { curSel.value = S.getCurrency(); curSel.addEventListener('change', () => { S.setCurrency(curSel.value); toast('Devise mise à jour', 'ok'); }); }
 
     // activity
     const clrA = $('#clearActivityBtn');
