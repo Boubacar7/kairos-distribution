@@ -131,6 +131,39 @@
     return String(h);
   }
 
+  function b64(buf) {
+    const bytes = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
+  function b64ToBuf(s) {
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  async function pbkdf2Hash(password, saltB64) {
+    if (!window.crypto || !crypto.subtle) return null;
+    const enc = new TextEncoder();
+    let salt;
+    if (saltB64) salt = b64ToBuf(saltB64);
+    else { salt = crypto.getRandomValues(new Uint8Array(16)); }
+    const key = await crypto.subtle.importKey('raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 120000, hash: 'SHA-256' }, key, 256);
+    return 'pbkdf2$120000$' + b64(salt) + '$' + b64(bits);
+  }
+  async function verifyPwd(password, stored) {
+    if (!stored) return false;
+    if (stored.startsWith('pbkdf2$')) {
+      const parts = stored.split('$');
+      const salt = parts[2];
+      const computed = await pbkdf2Hash(password, salt);
+      return computed === stored;
+    }
+    return simpleHash(password) === stored;
+  }
+
   function read(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -406,27 +439,36 @@
     setUsers(remaining);
     return true;
   }
-  function setUserPassword(id, newPwd) {
+  async function setUserPassword(id, newPwd) {
     const list = getUsers();
     const u = list.find(x => x.id === id);
     if (!u) return false;
-    u.passwordHash = simpleHash(newPwd);
+    const hash = await pbkdf2Hash(newPwd);
+    u.passwordHash = hash || simpleHash(newPwd);
     setUsers(list);
     return true;
   }
   function getSession() { return read(K.SESSION, null); }
   function setSession(s) { if (s) write(K.SESSION, s); else localStorage.removeItem(K.SESSION); }
 
-  function adminLogin(usernameOrPwd, password) {
-    // Supports legacy single-arg usage
+  async function adminLogin(usernameOrPwd, password) {
     let username, pwd;
     if (password === undefined) { username = 'admin'; pwd = usernameOrPwd; }
     else { username = usernameOrPwd; pwd = password; }
     const users = getUsers();
     const user = users.find(u => u.username.toLowerCase() === String(username).toLowerCase());
     if (!user) return false;
-    if (simpleHash(pwd) !== user.passwordHash) return false;
-    // Mirror legacy admin key for back-compat
+    const ok = await verifyPwd(pwd, user.passwordHash);
+    if (!ok) return false;
+    // Upgrade legacy hash to PBKDF2 opportunistically
+    if (user.passwordHash && !String(user.passwordHash).startsWith('pbkdf2$')) {
+      const newHash = await pbkdf2Hash(pwd);
+      if (newHash) {
+        const list = getUsers();
+        const me = list.find(x => x.id === user.id);
+        if (me) { me.passwordHash = newHash; setUsers(list); }
+      }
+    }
     const a = read(K.ADMIN, DEFAULT_ADMIN);
     a.loggedUntil = Date.now() + 1000 * 60 * 60 * 4;
     write(K.ADMIN, a);
@@ -460,11 +502,12 @@
     const list = Array.isArray(roles) ? roles : [roles];
     return list.indexOf(u.role) >= 0;
   }
-  function adminChangePassword(oldPwd, newPwd) {
+  async function adminChangePassword(oldPwd, newPwd) {
     const u = currentUser();
     if (!u) return false;
-    if (simpleHash(oldPwd) !== u.passwordHash) return false;
-    setUserPassword(u.id, newPwd);
+    const ok = await verifyPwd(oldPwd, u.passwordHash);
+    if (!ok) return false;
+    await setUserPassword(u.id, newPwd);
     logActivity('password_change', 'Mot de passe modifié', u.id);
     return true;
   }
@@ -521,11 +564,14 @@
   function generateOtp(target) {
     target = String(target || '').trim();
     if (!target) return null;
+    const rate = canRequestOtp(target);
+    if (!rate.ok) return { error: rate.reason, wait: rate.wait };
     const code = String(Math.floor(100000 + Math.random() * 900000));
     const list = read(K.OTPS, []).filter(o => o.target !== target);
     list.unshift({ target, code, createdAt: todayISO(), expiresAt: Date.now() + 1000 * 60 * 10, consumed: false });
     if (list.length > 100) list.length = 100;
     write(K.OTPS, list);
+    recordOtpRequest(target);
     dispatch('otp-change');
     logActivity('otp_issued', 'Code OTP généré pour ' + target);
     return code;

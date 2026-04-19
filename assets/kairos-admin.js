@@ -25,11 +25,11 @@
   function showApp() { $('#loginWrap').classList.add('hidden'); $('#app').classList.remove('hidden'); renderAll(); }
   function initAuth() {
     if (S.adminIsLogged()) showApp(); else showLogin();
-    $('#loginForm').addEventListener('submit', (e) => {
+    $('#loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const user = $('#loginUser').value.trim() || 'admin';
       const pwd = $('#loginPwd').value;
-      const ok = S.adminLogin(user, pwd);
+      const ok = await S.adminLogin(user, pwd);
       if (ok) { $('#loginPwd').value = ''; showApp(); toast('Bienvenue', 'ok'); }
       else toast('Identifiants incorrects', 'err');
     });
@@ -473,10 +473,10 @@
     });
     toast('Réglages enregistrés', 'ok');
   }
-  function handlePasswordChange(e) {
+  async function handlePasswordChange(e) {
     e.preventDefault();
     const f = e.target;
-    const ok = S.adminChangePassword(f.old.value, f.new.value);
+    const ok = await S.adminChangePassword(f.old.value, f.new.value);
     if (ok) { toast('Mot de passe changé', 'ok'); f.reset(); }
     else toast('Ancien mot de passe invalide', 'err');
   }
@@ -613,19 +613,16 @@
       }
     }));
   }
-  function saveUserForm(e) {
+  async function saveUserForm(e) {
     e.preventDefault();
     const f = e.target;
     if (!requireRole(['owner'])) { toast('Réservé au owner', 'err'); return; }
     const id = f.id.value || undefined;
     const data = { id, username: f.username.value.trim(), role: f.role.value };
     if (!data.username) { toast('Nom obligatoire', 'err'); return; }
-    if (!id) {
-      if (!f.password.value) { toast('Mot de passe obligatoire', 'err'); return; }
-      data.passwordHash = (function (p) { let h = 0; for (let i = 0; i < p.length; i++) { h = ((h << 5) - h) + p.charCodeAt(i); h |= 0; } return String(h); })(f.password.value);
-    }
+    if (!id && !f.password.value) { toast('Mot de passe obligatoire', 'err'); return; }
     const saved = S.saveUser(data);
-    if (f.password.value && id) S.setUserPassword(saved.id, f.password.value);
+    if (f.password.value) await S.setUserPassword(saved.id, f.password.value);
     f.reset();
     toast('Utilisateur enregistré', 'ok');
     renderUsers();
@@ -827,7 +824,6 @@
         <div class="row"><strong>${(order.items || []).length} article(s)</strong> · Total ${S.fmtMoney(order.total)}</div>
         <div class="trk">${esc(order.trackingNumber)}</div>
       </div>
-      <div class="no-print" style="margin-top:16px;text-align:center"><button onclick="window.print()">Imprimer</button></div>
       </body></html>`;
     const w = window.open('', '_blank', 'width=480,height=640');
     if (!w) { toast('Bloqué par le navigateur', 'err'); return; }

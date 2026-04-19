@@ -630,6 +630,11 @@
       return;
     }
     const code = S.generateOtp(target);
+    if (code && typeof code === 'object' && code.error) {
+      if (code.error === 'cooldown') toast('Patientez ' + code.wait + 's avant un nouveau code', 'err');
+      else toast('Trop de demandes — réessayez dans ' + code.wait + 'min', 'err');
+      return;
+    }
     state.myOrders = { target, verified: false };
     $('#otpBox').style.display = 'block';
     $('#otpInput').value = '';
