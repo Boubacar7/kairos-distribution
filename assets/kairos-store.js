@@ -20,7 +20,14 @@
     USERS: 'kairos_users',
     ACTIVITY: 'kairos_activity',
     OTPS: 'kairos_otps',
-    SESSION: 'kairos_session'
+    SESSION: 'kairos_session',
+    WISHLIST: 'kairos_wishlist',
+    COMPARE: 'kairos_compare',
+    LOYALTY: 'kairos_loyalty',
+    REVIEWS: 'kairos_reviews',
+    OTP_RATE: 'kairos_otp_rate',
+    LOCALE: 'kairos_locale',
+    CURRENCY: 'kairos_currency'
   };
 
   const DEFAULT_PRODUCTS = [
@@ -342,6 +349,9 @@
       if (c) { c.used = (Number(c.used) || 0) + 1; setCoupons(list); }
     }
     clearCart();
+    const pts = pointsForOrder(order.total || 0);
+    const tgt = (order.customer && (order.customer.phone || order.customer.email)) || '';
+    if (tgt && pts > 0) { addLoyaltyPoints(tgt, pts, 'Commande ' + id); order.loyaltyAwarded = pts; }
     logActivity('order_created', 'Commande ' + id + ' créée');
     notifyNewOrder(order);
     return order;
@@ -613,6 +623,147 @@
     if (e.key === K.ACTIVITY) dispatch('activity-change');
   });
 
+  /* ---------- wishlist ---------- */
+  function getWishlist() { return read(K.WISHLIST, []); }
+  function isInWishlist(pid) { return getWishlist().includes(pid); }
+  function toggleWishlist(pid) {
+    const list = getWishlist();
+    const idx = list.indexOf(pid);
+    if (idx >= 0) list.splice(idx, 1); else list.push(pid);
+    write(K.WISHLIST, list);
+    dispatch('wishlist-change');
+    return idx < 0;
+  }
+  function clearWishlist() { write(K.WISHLIST, []); dispatch('wishlist-change'); }
+
+  /* ---------- compare ---------- */
+  function getCompare() { return read(K.COMPARE, []); }
+  function isInCompare(pid) { return getCompare().includes(pid); }
+  function toggleCompare(pid) {
+    const list = getCompare();
+    const idx = list.indexOf(pid);
+    if (idx >= 0) list.splice(idx, 1);
+    else {
+      if (list.length >= 4) return { ok: false, reason: 'max' };
+      list.push(pid);
+    }
+    write(K.COMPARE, list);
+    dispatch('compare-change');
+    return { ok: true, added: idx < 0 };
+  }
+  function clearCompare() { write(K.COMPARE, []); dispatch('compare-change'); }
+
+  /* ---------- loyalty (points per order) ---------- */
+  function getLoyalty(target) {
+    const all = read(K.LOYALTY, {});
+    return all[target] || { points: 0, history: [] };
+  }
+  function addLoyaltyPoints(target, points, reason) {
+    if (!target || !points) return;
+    const all = read(K.LOYALTY, {});
+    const cur = all[target] || { points: 0, history: [] };
+    cur.points += points;
+    cur.history.unshift({ ts: Date.now(), points, reason: reason || '' });
+    all[target] = cur;
+    write(K.LOYALTY, all);
+    dispatch('loyalty-change');
+  }
+  function pointsForOrder(totalFcfa) { return Math.floor(totalFcfa / 1000); }
+
+  /* ---------- recommendations ---------- */
+  function recommendProducts(productId, limit) {
+    const products = getProducts().filter(p => p.status !== 'Brouillon' && p.id !== productId);
+    const base = getProduct(productId);
+    if (!base) return products.slice(0, limit || 4);
+    const sameCat = products.filter(p => p.category === base.category);
+    const others = products.filter(p => p.category !== base.category);
+    return sameCat.concat(others).slice(0, limit || 4);
+  }
+
+  /* ---------- reviews ---------- */
+  function getReviews(productId) {
+    const all = read(K.REVIEWS, []);
+    return productId ? all.filter(r => r.productId === productId && r.status === 'Approuvé') : all;
+  }
+  function saveReview(r) {
+    const all = read(K.REVIEWS, []);
+    if (!r.id) r.id = 'rv-' + uid();
+    if (!r.createdAt) r.createdAt = Date.now();
+    if (!r.status) r.status = 'En attente';
+    const i = all.findIndex(x => x.id === r.id);
+    if (i >= 0) all[i] = r; else all.unshift(r);
+    write(K.REVIEWS, all);
+    dispatch('reviews-change');
+    logActivity('review_' + (i >= 0 ? 'update' : 'create'), 'Avis ' + r.id + ' (' + (r.productId || '?') + ')');
+    return r;
+  }
+  function deleteReview(id) {
+    const all = read(K.REVIEWS, []).filter(r => r.id !== id);
+    write(K.REVIEWS, all);
+    dispatch('reviews-change');
+    logActivity('review_delete', 'Avis ' + id + ' supprimé');
+  }
+  function setReviewStatus(id, status) {
+    const all = read(K.REVIEWS, []);
+    const r = all.find(x => x.id === id);
+    if (!r) return;
+    r.status = status;
+    write(K.REVIEWS, all);
+    dispatch('reviews-change');
+    logActivity('review_status', 'Avis ' + id + ' → ' + status);
+  }
+
+  /* ---------- i18n / currency ---------- */
+  const LOCALES = {
+    fr: {
+      add_to_cart: 'Ajouter au panier', buy_now: 'Acheter maintenant', in_stock: 'En stock',
+      out_of_stock: 'Rupture', search: 'Rechercher un produit', checkout: 'Commander',
+      wishlist: 'Favoris', compare: 'Comparer', points: 'points', reviews: 'Avis',
+      recommended: 'Produits recommandés'
+    },
+    en: {
+      add_to_cart: 'Add to cart', buy_now: 'Buy now', in_stock: 'In stock',
+      out_of_stock: 'Out of stock', search: 'Search a product', checkout: 'Checkout',
+      wishlist: 'Wishlist', compare: 'Compare', points: 'points', reviews: 'Reviews',
+      recommended: 'Recommended products'
+    }
+  };
+  const CURRENCIES = {
+    FCFA: { code: 'FCFA', rate: 1, symbol: 'FCFA', suffix: true },
+    EUR:  { code: 'EUR',  rate: 1/655.957, symbol: '€', suffix: false },
+    USD:  { code: 'USD',  rate: 1/600,     symbol: '$', suffix: false }
+  };
+  function getLocale() { try { return localStorage.getItem(K.LOCALE) || 'fr'; } catch (e) { return 'fr'; } }
+  function setLocale(l) { try { localStorage.setItem(K.LOCALE, l); } catch (e) {} dispatch('locale-change'); }
+  function t(key) { const l = LOCALES[getLocale()] || LOCALES.fr; return l[key] || key; }
+  function getCurrency() { try { return localStorage.getItem(K.CURRENCY) || 'FCFA'; } catch (e) { return 'FCFA'; } }
+  function setCurrency(c) { try { localStorage.setItem(K.CURRENCY, c); } catch (e) {} dispatch('currency-change'); }
+  function fmtMoneyLocalized(amount) {
+    const c = CURRENCIES[getCurrency()] || CURRENCIES.FCFA;
+    const converted = amount * c.rate;
+    if (c.code === 'FCFA') return new Intl.NumberFormat('fr-FR').format(Math.round(converted)) + ' ' + c.symbol;
+    return c.symbol + new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(converted);
+  }
+
+  /* ---------- OTP rate limiting ---------- */
+  function canRequestOtp(target) {
+    const all = read(K.OTP_RATE, {});
+    const entry = all[target] || { count: 0, last: 0, windowStart: 0 };
+    const now = Date.now();
+    if (now - entry.windowStart > 3600 * 1000) { entry.count = 0; entry.windowStart = now; }
+    if (now - entry.last < 30 * 1000) return { ok: false, reason: 'cooldown', wait: Math.ceil((30 * 1000 - (now - entry.last)) / 1000) };
+    if (entry.count >= 5) return { ok: false, reason: 'max', wait: Math.ceil((3600 * 1000 - (now - entry.windowStart)) / 60000) };
+    return { ok: true };
+  }
+  function recordOtpRequest(target) {
+    const all = read(K.OTP_RATE, {});
+    const entry = all[target] || { count: 0, last: 0, windowStart: Date.now() };
+    entry.count += 1;
+    entry.last = Date.now();
+    all[target] = entry;
+    write(K.OTP_RATE, all);
+  }
+
   /* ---------- reset ---------- */
   function resetAll() {
     Object.values(K).forEach(k => localStorage.removeItem(k));
@@ -623,7 +774,7 @@
 
   global.KairosStore = {
     K,
-    fmtMoney, formatDate, uid, effectivePrice,
+    fmtMoney, fmtMoneyLocalized, formatDate, uid, effectivePrice,
     getProducts, setProducts, getProduct, saveProduct, deleteProduct,
     getCart, setCart, addToCart, updateCartQty, removeFromCart, clearCart, cartSummary,
     getOrders, setOrders, getOrder, createOrder, updateOrderStatus, updateOrderTracking, deleteOrder,
@@ -634,9 +785,16 @@
     getZones, saveZone, deleteZone,
     logActivity, getActivity, clearActivity,
     generateOtp, verifyOtp, getPendingOtps,
+    canRequestOtp, recordOtpRequest,
     findOrdersForBuyer,
     resizeImage,
     canPush, requestPush, notifyNewOrder,
+    getWishlist, isInWishlist, toggleWishlist, clearWishlist,
+    getCompare, isInCompare, toggleCompare, clearCompare,
+    getLoyalty, addLoyaltyPoints, pointsForOrder,
+    recommendProducts,
+    getReviews, saveReview, deleteReview, setReviewStatus,
+    getLocale, setLocale, t, getCurrency, setCurrency,
     resetAll
   };
 })(window);

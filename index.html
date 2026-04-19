@@ -149,6 +149,7 @@ button,input,select,textarea{font:inherit;color:inherit}
     <a href="#suivi">Suivi</a>
     <a href="#mes-commandes">Mes commandes</a>
     <a href="#favoris">Favoris</a>
+    <a href="#fidelite">Fidélité</a>
     <a href="#avis">Avis</a>
     <a href="#retours">Retours</a>
     <a href="/admistration">Administration</a>
@@ -188,6 +189,24 @@ button,input,select,textarea{font:inherit;color:inherit}
     <div class="chips" id="catChips" style="margin-bottom:14px"></div>
     <div class="prod" id="productGrid"></div>
   </section>
+
+  <section class="sec" id="favoris">
+    <h2>Mes favoris</h2>
+    <p class="small">Retrouvez vos produits coups de cœur et passez commande en un clic.</p>
+    <div id="wishlistGrid" class="prod" style="margin-top:16px"></div>
+  </section>
+
+  <section class="sec" id="fidelite">
+    <h2>Programme de fidélité</h2>
+    <p class="small">Cumulez 1 point pour chaque 1 000 FCFA dépensés. Saisissez votre contact pour voir vos points.</p>
+    <form id="loyaltyForm" class="track-form" style="margin-top:10px">
+      <input id="loyaltyTarget" placeholder="Téléphone ou email..." required>
+      <button class="btn" type="submit">Voir mes points</button>
+    </form>
+    <div id="loyaltyInfo" style="margin-top:12px"></div>
+  </section>
+
+  <div class="compare-bar" id="compareBar"></div>
 
   <section class="sec" id="suivi">
     <div class="split">
@@ -278,6 +297,20 @@ button,input,select,textarea{font:inherit;color:inherit}
     <div class="modal-foot">
       <button class="btn btn2" data-close type="button">Fermer</button>
       <button class="btn" id="pmAdd" type="button">Ajouter au panier</button>
+    </div>
+  </div>
+</div>
+
+<!-- Compare modal -->
+<div class="modal" id="compareModal" role="dialog" aria-modal="true">
+  <div class="modal-inner" style="max-width:900px">
+    <div class="modal-head">
+      <h3>Comparer les produits</h3>
+      <button class="close-btn" data-close>&times;</button>
+    </div>
+    <div class="modal-body orders-scroll" id="compareBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn2" id="compareClear" type="button">Vider la comparaison</button>
     </div>
   </div>
 </div>

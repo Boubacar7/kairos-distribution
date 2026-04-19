@@ -73,8 +73,11 @@
       const hasPromo = Number(p.promo) > 0;
       const outOfStock = Number(p.stock) <= 0;
       const img = p.image ? `style="background-image:url('${escapeAttr(p.image)}')"` : '';
+      const fav = S.isInWishlist(p.id);
+      const cmp = S.isInCompare(p.id);
       return `
-        <article class="p" data-id="${p.id}">
+        <article class="p" data-id="${p.id}" style="position:relative">
+          <button class="wishlist-btn" data-action="fav" title="Favori" style="position:absolute;top:10px;right:10px;z-index:2;background:var(--surface)">${fav ? '♥' : '♡'}</button>
           <div class="ph" ${img}></div>
           <div class="pb">
             <span class="pill">${escapeHtml(p.category)}</span>
@@ -84,6 +87,9 @@
               <span class="price">${S.fmtMoney(effective)}</span>
               ${hasPromo ? `<span class="price-old">${S.fmtMoney(p.price)}</span><span class="promo-badge">-${p.promo}%</span>` : ''}
             </div>
+            <label class="small" style="display:flex;gap:6px;align-items:center;margin-top:6px;cursor:pointer">
+              <input type="checkbox" data-action="cmp" ${cmp ? 'checked' : ''}> Comparer
+            </label>
             <div style="display:flex;gap:8px;margin-top:10px">
               <button class="btn btn2" data-action="view" style="flex:1;padding:10px 12px">Détail</button>
               <button class="btn" data-action="add" style="flex:1;padding:10px 12px" ${outOfStock ? 'disabled' : ''}>${outOfStock ? 'Rupture' : 'Ajouter'}</button>
@@ -102,6 +108,19 @@
       card.querySelector('[data-action="view"]').addEventListener('click', (e) => {
         e.stopPropagation();
         openProduct(id);
+      });
+      card.querySelector('[data-action="fav"]').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const added = S.toggleWishlist(id);
+        toast(added ? 'Ajouté aux favoris' : 'Retiré des favoris', 'ok');
+      });
+      card.querySelector('[data-action="cmp"]').addEventListener('change', (e) => {
+        e.stopPropagation();
+        const res = S.toggleCompare(id);
+        if (!res.ok && res.reason === 'max') {
+          e.target.checked = false;
+          toast('Max 4 produits à comparer', 'err');
+        }
       });
     });
   }
@@ -175,6 +194,23 @@
       toast('Ajouté au panier', 'ok');
       closeModals();
     };
+    const recos = S.recommendProducts(id, 4);
+    if (recos.length) {
+      const recoWrap = document.createElement('div');
+      recoWrap.style.marginTop = '20px';
+      recoWrap.innerHTML = `
+        <div class="small" style="margin-bottom:8px;font-weight:600">Produits similaires</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">
+          ${recos.map(r => `
+            <div class="reco" data-id="${r.id}" style="cursor:pointer;border:1px solid var(--border);border-radius:12px;padding:8px;background:var(--surface)">
+              <div class="ph" style="height:80px;border-radius:8px;${r.image ? `background-image:url('${escapeAttr(r.image)}')` : ''}"></div>
+              <div style="font-size:12px;margin-top:6px;font-weight:600">${escapeHtml(r.name)}</div>
+              <div style="font-size:12px;color:var(--primary)">${S.fmtMoney(S.effectivePrice(r))}</div>
+            </div>`).join('')}
+        </div>`;
+      $('#pmBody').appendChild(recoWrap);
+      $$('.reco', recoWrap).forEach(el => el.addEventListener('click', () => openProduct(el.dataset.id)));
+    }
     openModal('productModal');
   }
 
@@ -676,11 +712,106 @@
     if (otpCancel) otpCancel.addEventListener('click', cancelMyOrdersOtp);
     const themeBtn = $('#themeToggle');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+    const wishBtn = $('#wishlistBtn');
+    if (wishBtn) wishBtn.addEventListener('click', () => { document.querySelector('#favoris').scrollIntoView({ behavior: 'smooth' }); });
+    const loyaltyForm = $('#loyaltyForm');
+    if (loyaltyForm) loyaltyForm.addEventListener('submit', handleLoyaltyLookup);
+    const compareClear = $('#compareClear');
+    if (compareClear) compareClear.addEventListener('click', () => { S.clearCompare(); closeModals(); toast('Comparaison vidée', 'ok'); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModals(); });
     window.addEventListener('kairos:cart-change', renderCart);
-    window.addEventListener('kairos:products-change', () => { renderCategories(); renderProducts(); });
+    window.addEventListener('kairos:products-change', () => { renderCategories(); renderProducts(); renderWishlist(); });
     window.addEventListener('kairos:orders-change', renderRecent);
     window.addEventListener('kairos:settings-change', () => { applySettings(); renderCart(); });
+    window.addEventListener('kairos:wishlist-change', () => { renderWishlist(); renderProducts(); });
+    window.addEventListener('kairos:compare-change', () => { renderCompareBar(); renderProducts(); });
+  }
+
+  function renderWishlist() {
+    const ids = S.getWishlist();
+    const grid = $('#wishlistGrid');
+    const countEl = $('#wishlistCount');
+    if (countEl) {
+      countEl.textContent = ids.length;
+      countEl.style.display = ids.length ? 'inline-block' : 'none';
+    }
+    if (!grid) return;
+    if (!ids.length) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Aucun favori pour l\'instant. Cliquez sur ♡ sur un produit.</div>'; return; }
+    const products = ids.map(id => S.getProduct(id)).filter(Boolean);
+    grid.innerHTML = products.map(p => `
+      <article class="p" data-id="${p.id}" style="position:relative">
+        <button class="wishlist-btn" data-action="unfav" title="Retirer" style="position:absolute;top:10px;right:10px;z-index:2;background:var(--surface)">♥</button>
+        <div class="ph" ${p.image ? `style="background-image:url('${escapeAttr(p.image)}')"` : ''}></div>
+        <div class="pb">
+          <span class="pill">${escapeHtml(p.category)}</span>
+          <h3 style="margin:0;font-size:1.05rem">${escapeHtml(p.name)}</h3>
+          <div class="price-row"><span class="price">${S.fmtMoney(S.effectivePrice(p))}</span></div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn2" data-action="view" style="flex:1">Détail</button>
+            <button class="btn" data-action="add" style="flex:1">Ajouter</button>
+          </div>
+        </div>
+      </article>`).join('');
+    $$('.p', grid).forEach(card => {
+      const id = card.dataset.id;
+      card.querySelector('[data-action="view"]').addEventListener('click', () => openProduct(id));
+      card.querySelector('[data-action="add"]').addEventListener('click', () => { S.addToCart(id, 1); toast('Ajouté au panier', 'ok'); });
+      card.querySelector('[data-action="unfav"]').addEventListener('click', () => { S.toggleWishlist(id); toast('Retiré des favoris', 'ok'); });
+    });
+  }
+
+  function renderCompareBar() {
+    const ids = S.getCompare();
+    const bar = $('#compareBar');
+    if (!bar) return;
+    if (!ids.length) { bar.classList.remove('on'); bar.innerHTML = ''; return; }
+    bar.classList.add('on');
+    bar.innerHTML = `
+      <span class="small"><strong>${ids.length}</strong> produit(s) à comparer</span>
+      <button class="btn" id="openCompare" type="button" style="padding:8px 12px">Comparer</button>
+      <button class="btn btn2" id="clearCompare" type="button" style="padding:8px 12px">Vider</button>`;
+    $('#openCompare').addEventListener('click', openCompareModal);
+    $('#clearCompare').addEventListener('click', () => { S.clearCompare(); toast('Comparaison vidée', 'ok'); });
+  }
+
+  function openCompareModal() {
+    const ids = S.getCompare();
+    const products = ids.map(id => S.getProduct(id)).filter(Boolean);
+    if (!products.length) { toast('Aucun produit à comparer', 'err'); return; }
+    const rows = [
+      ['Image', p => p.image ? `<div class="ph" style="height:100px;background-image:url('${escapeAttr(p.image)}')"></div>` : '—'],
+      ['Nom', p => `<strong>${escapeHtml(p.name)}</strong>`],
+      ['Catégorie', p => escapeHtml(p.category)],
+      ['Prix', p => S.fmtMoney(S.effectivePrice(p))],
+      ['Stock', p => String(p.stock)],
+      ['Description', p => escapeHtml(p.description || '')],
+      ['Variantes', p => (p.variants || []).map(v => escapeHtml(v.name)).join(', ') || '—']
+    ];
+    const html = `
+      <table style="width:100%;min-width:${100 + products.length * 180}px;border-collapse:collapse">
+        <thead><tr><th style="text-align:left;padding:10px">Attribut</th>${products.map(p => `<th style="padding:10px">${escapeHtml(p.name)}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${rows.map(([k, fn]) => `<tr><td style="padding:10px;border-top:1px solid var(--border);font-weight:600">${k}</td>${products.map(p => `<td style="padding:10px;border-top:1px solid var(--border);vertical-align:top">${fn(p)}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>`;
+    $('#compareBody').innerHTML = html;
+    openModal('compareModal');
+  }
+
+  function handleLoyaltyLookup(e) {
+    e.preventDefault();
+    const target = $('#loyaltyTarget').value.trim();
+    if (!target) return;
+    const l = S.getLoyalty(target);
+    $('#loyaltyInfo').innerHTML = `
+      <div class="box">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="loyalty-badge">${l.points} points</span>
+          <span class="small">${escapeHtml(target)}</span>
+        </div>
+        <div class="small" style="margin-top:10px;font-weight:600">Historique</div>
+        ${l.history.length ? l.history.slice(0, 10).map(h => `<div class="small">• ${S.formatDate(new Date(h.ts).toISOString())} — +${h.points} pts (${escapeHtml(h.reason)})</div>`).join('') : '<div class="small">Aucun historique.</div>'}
+      </div>`;
   }
 
   function applySettings() {
@@ -715,5 +846,7 @@
     renderProducts();
     renderCart();
     renderRecent();
+    renderWishlist();
+    renderCompareBar();
   });
 })();
