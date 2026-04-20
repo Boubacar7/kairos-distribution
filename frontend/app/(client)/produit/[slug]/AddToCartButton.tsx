@@ -21,11 +21,21 @@ export default function AddToCartButton({ product }: { product: Product }) {
   };
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center overflow-hidden rounded-full border border-border">
-        <button className="px-3 py-1.5" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
-        <span className="px-3 text-sm">{qty}</span>
-        <button className="px-3 py-1.5" onClick={() => setQty((q) => q + 1)}>+</button>
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center overflow-hidden rounded-pill border border-line-strong">
+        <button
+          className="px-4 py-2 text-ink hover:bg-cream-2"
+          onClick={() => setQty((q) => Math.max(1, q - 1))}
+        >
+          −
+        </button>
+        <span className="px-4 text-sm">{qty}</span>
+        <button
+          className="px-4 py-2 text-ink hover:bg-cream-2"
+          onClick={() => setQty((q) => q + 1)}
+        >
+          +
+        </button>
       </div>
       <button
         className="btn btn-primary"

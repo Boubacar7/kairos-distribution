@@ -18,8 +18,8 @@ export default function PanierPage() {
   const total = cartTotal(lines);
 
   return (
-    <section className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="font-serif text-3xl">Panier</h1>
+    <section className="mx-auto max-w-4xl px-4 pt-[90px] pb-16">
+      <h1 className="font-display text-[clamp(32px,5vw,48px)] -tracking-[0.03em]">Panier</h1>
       {lines.length === 0 ? (
         <div className="mt-6 text-center">
           <p className="text-muted">Votre panier est vide.</p>

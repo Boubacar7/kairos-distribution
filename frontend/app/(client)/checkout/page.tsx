@@ -51,8 +51,8 @@ export default function CheckoutPage() {
 
   if (lines.length === 0) {
     return (
-      <section className="mx-auto max-w-4xl px-4 py-10">
-        <h1 className="font-serif text-3xl">Commande</h1>
+      <section className="mx-auto max-w-4xl px-4 pt-[90px] pb-16">
+        <h1 className="font-display text-[clamp(32px,5vw,48px)] -tracking-[0.03em]">Commande</h1>
         <p className="mt-4 text-sm text-muted">Votre panier est vide.</p>
       </section>
     );
