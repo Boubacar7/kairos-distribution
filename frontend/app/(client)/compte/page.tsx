@@ -29,8 +29,9 @@ export default function ComptePage() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="font-serif text-3xl">Mon compte</h1>
+    <section className="mx-auto max-w-3xl px-4 pt-[90px] pb-16">
+      <span className="kicker">Espace client</span>
+      <h1 className="mt-2 font-display text-[clamp(32px,5vw,48px)] -tracking-[0.03em]">Mon compte</h1>
       <p className="mt-1 text-sm text-muted">Consultez votre commande avec son code ou votre numéro.</p>
       <form onSubmit={handleLookup} className="mt-6 grid gap-3 md:grid-cols-3">
         <div className="md:col-span-1">
