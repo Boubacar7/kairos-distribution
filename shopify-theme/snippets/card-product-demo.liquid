@@ -1,0 +1,56 @@
+{% comment %}
+  Card produit démo — rendu sur une boutique Shopify neuve (aucun produit
+  importé) pour que la section "Nos rituels du moment" ne soit jamais vide.
+  Données passées en argument, images lues depuis assets/.
+
+  Usage :
+    {% render 'card-product-demo',
+         handle: 'glow-skin',
+         title: 'Glow Skin Crème',
+         category: 'Beauté',
+         description: 'Hydratation intense...',
+         price_label: '24 900 FCFA',
+         compare_label: '32 000 FCFA',     comment: "ancien prix (optionnel)"
+         image: 'glow-skin.png' %}
+{% endcomment %}
+<a href="/products/{{ handle }}" class="product-card">
+  <div class="media">
+    {%- if image and image != blank -%}
+      <img src="{{ image | asset_url }}" alt="{{ title }}" loading="lazy">
+    {%- else -%}
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#f5d9d3 0%,#e8b8c8 50%,#d6a3b8 100%);"></div>
+    {%- endif -%}
+  </div>
+
+  <div class="chips">
+    {%- if category != blank -%}
+      <span class="chip">{{ category }}</span>
+    {%- else -%}
+      <span></span>
+    {%- endif -%}
+    {%- if compare_label and compare_label != blank -%}
+      <span class="chip chip-promo" style="font-size:10px;padding:4px 8px;">PROMO</span>
+    {%- endif -%}
+  </div>
+
+  <div class="title">{{ title }}</div>
+  {%- if description != blank -%}
+    <div class="tagline">{{ description | truncate: 80 }}</div>
+  {%- else -%}
+    <div class="tagline"></div>
+  {%- endif -%}
+
+  <div class="price-row">
+    <div>
+      <span class="price">{{ price_label }}</span>
+      {%- if compare_label and compare_label != blank -%}
+        <span class="old-price">{{ compare_label }}</span>
+      {%- endif -%}
+    </div>
+    <span class="add-btn" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </span>
+  </div>
+</a>
