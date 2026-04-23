@@ -57,5 +57,36 @@ services:
       - /app/.next
     command: npm run dev
 
+  directus:
+    image: directus/directus:11
+    container_name: kairos-directus
+    ports:
+      - "8055:8055"
+    environment:
+      KEY: "kairos-directus-key-change-me"
+      SECRET: "kairos-directus-secret-change-me"
+      ADMIN_EMAIL: admin@kairos.local
+      ADMIN_PASSWORD: kairos2026
+      DB_CLIENT: pg
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: kairos
+      DB_USER: kairos
+      DB_PASSWORD: kairos
+      PUBLIC_URL: http://localhost:8055
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: "http://localhost:3000"
+      WEBSOCKETS_ENABLED: "true"
+    volumes:
+      - directus-uploads:/directus/uploads
+      - directus-extensions:/directus/extensions
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
 volumes:
   kairos-db-data:
+  directus-uploads:
+  directus-extensions:
