@@ -65,7 +65,7 @@ services:
     environment:
       KEY: "kairos-directus-key-change-me"
       SECRET: "kairos-directus-secret-change-me"
-      ADMIN_EMAIL: admin@kairos.local
+      ADMIN_EMAIL: admin@kairos.sn
       ADMIN_PASSWORD: kairos2026
       DB_CLIENT: pg
       DB_HOST: db

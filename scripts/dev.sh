@@ -78,7 +78,7 @@ PIDS+=($!)
 ok "Tout est lancé."
 echo ""
 echo "  Boutique : http://localhost:3000"
-echo "  Admin    : http://localhost:3000/admin  (admin@kairos.local / kairos2026)"
+echo "  Admin    : http://localhost:3000/admin  (admin@kairos.sn / kairos2026)"
 echo "  API      : http://localhost:4000/api"
 echo ""
 echo "  Ctrl+C pour tout arrêter."
