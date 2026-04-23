@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { cartCount, readCart } from '@/lib/cart';
+import { Currency } from '@/lib/api';
 
 const LINKS = [
   { href: '/', label: 'Accueil' },
@@ -11,14 +12,14 @@ const LINKS = [
   { href: '/compte', label: 'Avis' },
   { href: '/support', label: 'Support' },
 ];
-const CURRENCIES = ['FCFA', 'EUR', 'USD'] as const;
+const CURRENCIES: Currency[] = ['FCFA', 'EUR', 'USD'];
 
 export default function Navbar() {
   const pathname = usePathname();
   const [count, setCount] = useState(0);
   const [mobile, setMobile] = useState(false);
   const [opaque, setOpaque] = useState(false);
-  const [currency, setCurrency] = useState<(typeof CURRENCIES)[number]>('FCFA');
+  const [currency, setCurrency] = useState<Currency>('FCFA');
 
   const onHome = pathname === '/';
 
@@ -46,12 +47,12 @@ export default function Navbar() {
 
   useEffect(() => {
     try {
-      const v = localStorage.getItem('kairos_currency');
-      if (v && CURRENCIES.includes(v as (typeof CURRENCIES)[number])) setCurrency(v as (typeof CURRENCIES)[number]);
+      const v = localStorage.getItem('kairos_currency') as Currency | null;
+      if (v === 'FCFA' || v === 'EUR' || v === 'USD') setCurrency(v);
     } catch {}
   }, []);
 
-  const pickCurrency = (c: (typeof CURRENCIES)[number]) => {
+  const pickCurrency = (c: Currency) => {
     setCurrency(c);
     localStorage.setItem('kairos_currency', c);
     window.dispatchEvent(new CustomEvent('kairos:currency'));
@@ -60,17 +61,25 @@ export default function Navbar() {
   const navCls = opaque
     ? 'bg-white/95 backdrop-blur-md shadow-[0_1px_0_rgba(26,20,20,0.08)]'
     : 'bg-transparent';
-  const txtMain = opaque ? 'text-ink' : 'text-white';
-  const txtSub = opaque ? 'text-ink-2/70' : 'text-white/75';
+
+  // When the hero is visible (home + transparent state), hide the left brand
+  // block since the hero image has a baked-in top-left title.
+  const brandVisible = !(onHome && !opaque);
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-[100] transition-[background,box-shadow] duration-300 ${navCls}`}>
-      <div className="flex items-center justify-between px-4 py-3.5 md:px-12">
-        <Link href="/" className="flex flex-col items-start leading-tight">
-          <span className={`font-display text-xl font-medium -tracking-[0.01em] transition-colors ${txtMain}`}>
+      <div className="flex h-[58px] items-center justify-between px-4 md:h-[70px] md:px-12">
+        <Link
+          href="/"
+          className={`flex flex-col items-start leading-tight transition-opacity ${
+            brandVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
+          aria-hidden={!brandVisible}
+        >
+          <span className={`font-display text-xl font-medium -tracking-[0.01em] ${opaque ? 'text-ink' : 'text-white'}`}>
             My body goal
           </span>
-          <span className={`text-[9px] font-bold uppercase tracking-[0.1em] transition-colors ${txtSub}`}>
+          <span className={`text-[9px] font-bold uppercase tracking-[0.1em] ${opaque ? 'text-ink-2/70' : 'text-white/75'}`}>
             By Kairos.Distribution
           </span>
         </Link>
@@ -104,7 +113,9 @@ export default function Navbar() {
               const on = currency === c;
               const base = 'rounded-pill px-2.5 py-1 text-[10px] font-bold transition-colors';
               const colors = on
-                ? 'bg-white text-bordeaux'
+                ? opaque
+                  ? 'bg-bordeaux text-white'
+                  : 'bg-white text-bordeaux'
                 : opaque
                   ? 'text-ink-2 hover:text-bordeaux'
                   : 'text-white hover:text-white';

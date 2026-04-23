@@ -12,16 +12,59 @@ async function main() {
   });
 
   const products = [
-    { slug: 'glow-skin-creme', name: 'Glow Skin Crème', category: 'Beauté', price: 24900, stock: 42, description: 'Hydratation quotidienne et éclat durable pour tous types de peau.' },
-    { slug: 'trim-active-plus', name: 'Trim Active Plus', category: 'Amincissant', price: 18500, promo: 10, stock: 35, description: 'Formule minceur renforcée à base d\'ingrédients naturels.' },
-    { slug: 'silhouette-elite', name: 'Silhouette Elite', category: 'Amincissant', price: 29900, stock: 20, description: 'Programme minceur avancé pour résultats visibles.' },
-    { slug: 'velvet-glow-serum', name: 'Velvet Glow Serum', category: 'Beauté', price: 21500, promo: 15, stock: 50, description: 'Sérum anti-âge à l\'acide hyaluronique.' },
+    {
+      slug: 'glow-skin',
+      name: 'Glow Skin Crème',
+      category: 'Beauté',
+      price: 24900,
+      promo: 32000,
+      stock: 42,
+      image: '/products/glow-skin.png',
+      description: "Hydratation intense, éclat visible en 7 jours. Soin quotidien enrichi en huile d'argan, acide hyaluronique et vitamine E.",
+    },
+    {
+      slug: 'trim-active',
+      name: 'Trim Active Plus',
+      category: 'Amincissant',
+      price: 18500,
+      stock: 35,
+      image: '/products/trim-active.png',
+      description: 'Programme silhouette 28 jours. Complexe drainant à base de plantes, formule non-stimulante.',
+    },
+    {
+      slug: 'curve-up',
+      name: 'Curve Up Gel',
+      category: 'Postérieur',
+      price: 27500,
+      stock: 20,
+      image: '/products/curve-up.png',
+      description: 'Routine tonifiante et raffermissante. Gel à la caféine végétale et beurre de karité.',
+    },
+    {
+      slug: 'confidence',
+      name: 'Confidence Kit',
+      category: 'Promo',
+      price: 54000,
+      promo: 72000,
+      stock: 12,
+      image: '/products/confidence.png',
+      description: 'Rituel complet beauté + silhouette. Coffret signature, 5 produits hero, livraison offerte.',
+    },
+    {
+      slug: 'shape-mask',
+      name: 'Shape & Firm Masque',
+      category: 'Postérieur',
+      price: 19900,
+      stock: 25,
+      image: '/products/shape-mask.png',
+      description: 'Masque raffermissant express 20 min. À poser 2 fois par semaine.',
+    },
   ];
   for (const p of products) {
     await prisma.product.upsert({
       where: { slug: p.slug },
-      update: {},
-      create: { ...p, status: ProductStatus.PUBLISHED },
+      update: { image: p.image, category: p.category, price: p.price, promo: p.promo ?? 0 },
+      create: { ...p, promo: p.promo ?? 0, status: ProductStatus.PUBLISHED },
     });
   }
 
@@ -37,4 +80,11 @@ async function main() {
   console.log('Seed OK — admin/kairos2026');
 }
 
-main().catch((e) => { console.error(e); process.exit(1); }).finally(async () => { await prisma.$disconnect(); });
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

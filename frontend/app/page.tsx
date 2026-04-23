@@ -7,7 +7,7 @@ import { api, Product } from '@/lib/api';
 
 async function getFeatured(): Promise<Product[]> {
   try {
-    const items = await api.get<Product[]>('/products?status=ACTIVE');
+    const items = await api.get<Product[]>('/products?status=PUBLISHED');
     return items.slice(0, 4);
   } catch {
     return [];
@@ -21,27 +21,76 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        {/* ── Full-bleed hero ── */}
-        <section className="hero-cover">
-          <div className="hero-cover-overlay" />
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="cover-eyebrow">Beauté · Silhouette · Confiance</div>
-            <h1 className="cover-title">My body goal</h1>
-            <p className="cover-sub">By Kairos.Distribution</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Link
-                href="/produits"
-                className="rounded-pill bg-white px-8 py-3.5 text-sm font-bold text-bordeaux shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition hover:scale-105"
-              >
-                Découvrir nos produits
-              </Link>
-              <Link
-                href="/compte"
-                className="rounded-pill border-[1.5px] border-white/50 bg-transparent px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Avis clients
-              </Link>
-            </div>
+        {/* ── Full-bleed image hero ── */}
+        <section className="relative block w-full overflow-hidden bg-ink">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/cover.jpg"
+            alt="My body goal"
+            className="block h-[100svh] w-full object-cover md:h-[90vh]"
+          />
+
+          {/* Top gradient overlay for nav legibility */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-0 right-0 top-0 h-[45%]"
+            style={{ background: 'linear-gradient(to bottom, rgba(20,10,10,0.65) 0%, transparent 100%)' }}
+          />
+          {/* Bottom gradient overlay for CTAs */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute bottom-0 left-0 right-0 h-[40%]"
+            style={{ background: 'linear-gradient(to top, rgba(20,10,10,0.65) 0%, transparent 100%)' }}
+          />
+
+          {/* Top-left stacked title */}
+          <div className="absolute left-0 top-0 z-20 flex flex-col gap-3.5 px-4 py-3.5 md:px-12 md:py-[14px]">
+            <span
+              className="font-display text-white"
+              style={{ fontSize: 'clamp(24px,4vw,32px)', lineHeight: 1.05, textShadow: '0 2px 16px rgba(0,0,0,.8)' }}
+            >
+              Mybodygoal
+            </span>
+            <span
+              className="text-white"
+              style={{
+                fontSize: 'clamp(10px,1.2vw,12px)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                textShadow: '0 1px 10px rgba(0,0,0,.8)',
+              }}
+            >
+              By Kairos.Distribution
+            </span>
+            <span
+              className="text-white/90"
+              style={{
+                fontSize: 'clamp(10px,1.1vw,11px)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                textShadow: '0 1px 10px rgba(0,0,0,.8)',
+              }}
+            >
+              Beauté · Silhouette · Confiance
+            </span>
+          </div>
+
+          {/* Bottom-left CTAs */}
+          <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-wrap items-end gap-3 px-4 pb-7 md:px-12 md:pb-10">
+            <Link
+              href="/produits"
+              className="rounded-pill bg-white px-7 py-3.5 text-sm font-bold text-bordeaux shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition hover:scale-105"
+            >
+              Voir les produits →
+            </Link>
+            <Link
+              href="/compte"
+              className="rounded-pill border-[1.5px] border-white/50 bg-transparent px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              Avis clients
+            </Link>
           </div>
         </section>
 
@@ -95,8 +144,8 @@ export default async function Home() {
             </div>
             <div className="grid gap-5 md:grid-cols-2">
               {[
-                { a: 'Aminata D.', c: 'Dakar', t: 'Un vrai coup de cœur', b: 'Livraison rapide, emballage soigné et les produits tiennent leurs promesses.' },
-                { a: 'Fatou N.', c: 'Abidjan', t: 'Résultats visibles', b: 'Après 3 semaines de routine, je vois une vraie différence. Le suivi client m’a aidée à tenir.' },
+                { a: 'Safi C.', c: 'Dakar', t: 'Un vrai coup de cœur', b: 'Livraison rapide, emballage soigné et les produits tiennent leurs promesses. La crème Glow Skin est devenue mon indispensable.' },
+                { a: 'Fatou N.', c: 'Abidjan', t: 'Résultats visibles', b: 'Après 3 semaines de Trim Active, je vois une vraie différence. Le suivi WhatsApp m’a aidée à tenir la routine.' },
               ].map((r) => (
                 <div key={r.a} className="card relative p-7">
                   <div className="mb-3 flex items-center justify-between">

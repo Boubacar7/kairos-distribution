@@ -27,7 +27,7 @@ export default function DashboardPage() {
   if (err) return <div className="mx-auto max-w-6xl p-6 text-sm text-red-700">{err}</div>;
   if (!data) return <div className="mx-auto max-w-6xl p-6 text-sm text-muted">Chargement…</div>;
 
-  const revenue = data.orders.reduce((acc, o) => acc + o.totalCents, 0);
+  const revenue = data.orders.reduce((acc, o) => acc + o.total, 0);
   const lowStock = data.products.filter((p) => p.stock > 0 && p.stock <= 5);
 
   return (
@@ -70,7 +70,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="rounded-full bg-soft px-2 py-0.5 text-xs text-primary">{o.status}</span>
-                <span className="font-medium">{formatPrice(o.totalCents)}</span>
+                <span className="font-medium">{formatPrice(o.total)}</span>
               </div>
             </li>
           ))}

@@ -51,7 +51,7 @@ export default function AdminCommandesPage() {
                   <span className="text-xs text-primary">{o.status}</span>
                 </div>
                 <div className="text-xs text-muted">{new Date(o.createdAt).toLocaleString('fr-FR')}</div>
-                <div className="mt-1 text-xs">{formatPrice(o.totalCents)}</div>
+                <div className="mt-1 text-xs">{formatPrice(o.total)}</div>
               </li>
             ))}
             {orders.length === 0 && <li className="p-4 text-sm text-muted">Aucune commande.</li>}
@@ -88,13 +88,13 @@ export default function AdminCommandesPage() {
                 {selected.items.map((it, i) => (
                   <li key={i} className="flex justify-between py-2 text-sm">
                     <span>{it.name} × {it.quantity}</span>
-                    <span>{formatPrice(it.priceCents * it.quantity)}</span>
+                    <span>{formatPrice(it.price * it.quantity)}</span>
                   </li>
                 ))}
               </ul>
               <div className="mt-4 flex justify-between border-t border-border pt-3 font-semibold">
                 <span>Total</span>
-                <span>{formatPrice(selected.totalCents)}</span>
+                <span>{formatPrice(selected.total)}</span>
               </div>
             </div>
           )}

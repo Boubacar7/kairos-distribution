@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, formatPrice } from '@/lib/api';
+import { useCurrency } from '@/lib/useCurrency';
 import { CartLine, cartTotal, clearCart, readCart } from '@/lib/cart';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const currency = useCurrency();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [form, setForm] = useState({
     buyerName: '',
@@ -59,11 +61,11 @@ export default function CheckoutPage() {
   }
 
   return (
-    <section className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="font-serif text-3xl">Commande</h1>
+    <section className="mx-auto max-w-4xl px-4 pt-[90px] pb-16">
+      <h1 className="font-display text-[clamp(32px,5vw,48px)] -tracking-[0.03em]">Commande</h1>
       <form onSubmit={handleSubmit} className="mt-6 grid gap-6 md:grid-cols-2">
         <div className="space-y-3">
-          <h2 className="font-serif text-lg">Vos coordonnées</h2>
+          <h2 className="font-display text-lg">Vos coordonnées</h2>
           <div>
             <label className="label">Nom complet</label>
             <input required className="input" value={form.buyerName} onChange={(e) => setForm({ ...form, buyerName: e.target.value })} />
@@ -100,20 +102,20 @@ export default function CheckoutPage() {
           </div>
         </div>
         <div>
-          <h2 className="font-serif text-lg">Récapitulatif</h2>
-          <ul className="mt-3 divide-y divide-border rounded-xl2 border border-border bg-surface">
+          <h2 className="font-display text-lg">Récapitulatif</h2>
+          <ul className="mt-3 divide-y divide-line-soft rounded-lg border border-line-soft bg-white">
             {lines.map((l) => (
               <li key={`${l.productId}:${l.variantId || ''}`} className="flex justify-between p-3 text-sm">
                 <span>{l.name} × {l.quantity}</span>
-                <span>{formatPrice(l.priceCents * l.quantity)}</span>
+                <span>{formatPrice(l.price * l.quantity, currency)}</span>
               </li>
             ))}
           </ul>
-          <div className="mt-4 flex justify-between rounded-xl2 border border-border bg-surface p-4">
+          <div className="mt-4 flex justify-between rounded-lg border border-line-soft bg-white p-4">
             <span className="text-sm text-muted">Total</span>
-            <span className="text-xl font-semibold">{formatPrice(total)}</span>
+            <span className="font-display text-2xl">{formatPrice(total, currency)}</span>
           </div>
-          {error && <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && <div className="mt-4 rounded-sm bg-red-50 p-3 text-sm text-red-700">{error}</div>}
           <button className="btn btn-primary mt-4 w-full" disabled={submitting}>
             {submitting ? 'Envoi…' : 'Confirmer la commande'}
           </button>
