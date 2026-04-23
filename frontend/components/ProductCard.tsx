@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { formatPrice, Product } from '@/lib/api';
+import { useCurrency } from '@/lib/useCurrency';
 
 function gradientFor(slug: string): 1 | 2 | 3 {
   let sum = 0;
@@ -8,15 +11,16 @@ function gradientFor(slug: string): 1 | 2 | 3 {
 }
 
 export default function ProductCard({ product }: { product: Product }) {
+  const currency = useCurrency();
   const g = gradientFor(product.slug);
-  const category = product.tags?.[0];
+  const discounted = product.promo > 0 && product.promo > product.price;
 
   return (
     <Link href={`/produit/${product.slug}`} className="product-card group flex flex-col">
-      {product.imageUrl ? (
+      {product.image ? (
         <div
           className="ph tall mb-3.5"
-          style={{ backgroundImage: `url(${product.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+          style={{ backgroundImage: `url(${product.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         />
       ) : (
         <div className={`ph tall g${g} mb-3.5`}>
@@ -26,10 +30,8 @@ export default function ProductCard({ product }: { product: Product }) {
 
       <div className="flex flex-col px-1 pb-1">
         <div className="mb-2 flex items-center justify-between">
-          {category ? <span className="chip text-[11px]">{category}</span> : <span />}
-          {product.compareAtCents ? (
-            <span className="chip chip-promo text-[10px]">PROMO</span>
-          ) : null}
+          <span className="chip text-[11px]">{product.category}</span>
+          {discounted ? <span className="chip chip-promo text-[10px]">PROMO</span> : null}
         </div>
 
         <div className="font-display text-lg leading-tight -tracking-[0.01em]">{product.name}</div>
@@ -43,10 +45,10 @@ export default function ProductCard({ product }: { product: Product }) {
 
         <div className="mt-3 flex items-center justify-between">
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-bold">{formatPrice(product.priceCents, product.currency)}</span>
-            {product.compareAtCents ? (
+            <span className="text-sm font-bold">{formatPrice(product.price, currency)}</span>
+            {discounted ? (
               <span className="text-[11px] text-muted line-through">
-                {formatPrice(product.compareAtCents, product.currency)}
+                {formatPrice(product.promo, currency)}
               </span>
             ) : null}
           </div>

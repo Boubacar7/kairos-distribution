@@ -8,7 +8,7 @@ export default function AdminProduitsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [err, setErr] = useState('');
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ name: '', priceCents: 0, stock: 0, description: '', imageUrl: '' });
+  const [form, setForm] = useState({ name: '', price: 0, stock: 0, description: '', image: '' });
 
   async function load() {
     const token = getToken();
@@ -30,7 +30,7 @@ export default function AdminProduitsPage() {
     if (!token) return;
     try {
       await api.post('/products', form, token);
-      setForm({ name: '', priceCents: 0, stock: 0, description: '', imageUrl: '' });
+      setForm({ name: '', price: 0, stock: 0, description: '', image: '' });
       setCreating(false);
       load();
     } catch (e: unknown) {
@@ -63,11 +63,11 @@ export default function AdminProduitsPage() {
           </div>
           <div>
             <label className="label">Image (URL)</label>
-            <input className="input" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
+            <input className="input" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
           </div>
           <div>
             <label className="label">Prix (centimes)</label>
-            <input required type="number" className="input" value={form.priceCents} onChange={(e) => setForm({ ...form, priceCents: Number(e.target.value) })} />
+            <input required type="number" className="input" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
           </div>
           <div>
             <label className="label">Stock</label>
@@ -100,7 +100,7 @@ export default function AdminProduitsPage() {
             {products.map((p) => (
               <tr key={p.id} className="border-b border-border">
                 <td className="py-2">{p.name}</td>
-                <td className="py-2">{formatPrice(p.priceCents, p.currency)}</td>
+                <td className="py-2">{formatPrice(p.price)}</td>
                 <td className="py-2">{p.stock}</td>
                 <td className="py-2">{p.status}</td>
                 <td className="py-2 text-right">

@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { CartLine, cartTotal, readCart, removeFromCart, updateQty } from '@/lib/cart';
 import { formatPrice } from '@/lib/api';
+import { useCurrency } from '@/lib/useCurrency';
 
 export default function PanierPage() {
   const [lines, setLines] = useState<CartLine[]>([]);
+  const currency = useCurrency();
 
   useEffect(() => {
     const refresh = () => setLines(readCart());
@@ -27,35 +29,35 @@ export default function PanierPage() {
         </div>
       ) : (
         <>
-          <ul className="mt-6 divide-y divide-border rounded-xl2 border border-border bg-surface">
+          <ul className="mt-6 divide-y divide-line-soft rounded-lg border border-line-soft bg-white">
             {lines.map((l) => (
               <li key={`${l.productId}:${l.variantId || ''}`} className="flex items-center gap-4 p-4">
-                <div className="h-20 w-20 overflow-hidden rounded-xl bg-soft">
-                  {l.imageUrl ? (
+                <div className="h-20 w-20 overflow-hidden rounded-md bg-rose-50">
+                  {l.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={l.imageUrl} alt={l.name} className="h-full w-full object-cover" />
+                    <img src={l.image} alt={l.name} className="h-full w-full object-cover" />
                   ) : null}
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">{l.name}</div>
-                  <div className="text-sm text-muted">{formatPrice(l.priceCents)}</div>
+                  <div className="text-sm text-muted">{formatPrice(l.price, currency)}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    className="rounded-full border border-border px-2"
+                    className="rounded-full border border-line-strong px-2"
                     onClick={() => updateQty(l.productId, l.quantity - 1, l.variantId)}
                   >−</button>
                   <span className="w-6 text-center text-sm">{l.quantity}</span>
                   <button
-                    className="rounded-full border border-border px-2"
+                    className="rounded-full border border-line-strong px-2"
                     onClick={() => updateQty(l.productId, l.quantity + 1, l.variantId)}
                   >+</button>
                 </div>
-                <div className="w-24 text-right font-medium">
-                  {formatPrice(l.priceCents * l.quantity)}
+                <div className="w-28 text-right font-medium">
+                  {formatPrice(l.price * l.quantity, currency)}
                 </div>
                 <button
-                  className="text-sm text-muted hover:text-primary"
+                  className="text-sm text-muted hover:text-bordeaux"
                   onClick={() => removeFromCart(l.productId, l.variantId)}
                 >
                   Retirer
@@ -63,9 +65,9 @@ export default function PanierPage() {
               </li>
             ))}
           </ul>
-          <div className="mt-6 flex items-center justify-between rounded-xl2 border border-border bg-surface p-4">
+          <div className="mt-6 flex items-center justify-between rounded-lg border border-line-soft bg-white p-4">
             <span className="text-sm text-muted">Sous-total</span>
-            <span className="text-xl font-semibold">{formatPrice(total)}</span>
+            <span className="font-display text-2xl">{formatPrice(total, currency)}</span>
           </div>
           <div className="mt-4 flex justify-end">
             <Link href="/checkout" className="btn btn-primary">Passer commande</Link>

@@ -35,29 +35,28 @@ export type Product = {
   slug: string;
   name: string;
   description?: string | null;
-  priceCents: number;
-  compareAtCents?: number | null;
-  currency: string;
-  imageUrl?: string | null;
+  category: string;
+  price: number;
+  promo: number;
   stock: number;
-  status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
-  tags?: string[];
+  image?: string | null;
+  status: 'PUBLISHED' | 'DRAFT' | 'ARCHIVED';
   variants?: Variant[];
 };
 
 export type Variant = {
   id: string;
   name: string;
-  priceCents: number;
+  priceDelta: number;
   stock: number;
-  sku?: string | null;
+  attributes?: Record<string, unknown> | null;
 };
 
 export type OrderItem = {
   productId: string;
   variantId?: string | null;
   name: string;
-  priceCents: number;
+  price: number;
   quantity: number;
 };
 
@@ -66,7 +65,7 @@ export type Order = {
   code: string;
   trackingCode: string;
   status: string;
-  totalCents: number;
+  total: number;
   items: OrderItem[];
   createdAt: string;
   buyerEmail?: string | null;
@@ -87,5 +86,15 @@ export type Review = {
   createdAt: string;
 };
 
-export const formatPrice = (cents: number, currency = 'EUR') =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(cents / 100);
+export type Currency = 'FCFA' | 'EUR' | 'USD';
+
+const RATES: Record<Currency, number> = { FCFA: 1, EUR: 1 / 656, USD: 1 / 610 };
+
+export function formatPrice(fcfa: number, currency: Currency = 'FCFA'): string {
+  const v = fcfa * RATES[currency];
+  if (currency === 'FCFA') {
+    return `${Math.round(v).toLocaleString('fr-FR').replace(/,/g, ' ')} FCFA`;
+  }
+  if (currency === 'EUR') return `${v.toFixed(2).replace('.', ',')} €`;
+  return `$${v.toFixed(2)}`;
+}

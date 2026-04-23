@@ -12,7 +12,7 @@ const CATS = [
 
 async function getProducts(): Promise<Product[]> {
   try {
-    return await api.get<Product[]>('/products?status=ACTIVE');
+    return await api.get<Product[]>('/products?status=PUBLISHED');
   } catch {
     return [];
   }
@@ -28,7 +28,7 @@ export default async function ProduitsPage({
   const filtered =
     activeCat === 'all'
       ? products
-      : products.filter((p) => (p.tags || []).includes(activeCat));
+      : products.filter((p) => p.category === activeCat);
 
   return (
     <section className="container-app screen-enter pt-[90px] pb-20">

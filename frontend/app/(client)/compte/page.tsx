@@ -62,13 +62,13 @@ export default function ComptePage() {
             {order.items.map((it, i) => (
               <li key={i} className="flex justify-between py-2 text-sm">
                 <span>{it.name} × {it.quantity}</span>
-                <span>{formatPrice(it.priceCents * it.quantity)}</span>
+                <span>{formatPrice(it.price * it.quantity)}</span>
               </li>
             ))}
           </ul>
           <div className="mt-4 flex justify-between border-t border-border pt-3 font-semibold">
             <span>Total</span>
-            <span>{formatPrice(order.totalCents)}</span>
+            <span>{formatPrice(order.total)}</span>
           </div>
         </div>
       )}

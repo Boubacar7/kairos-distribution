@@ -4,12 +4,12 @@ export type CartLine = {
   productId: string;
   variantId?: string;
   name: string;
-  priceCents: number;
+  price: number;
   quantity: number;
-  imageUrl?: string;
+  image?: string;
 };
 
-const KEY = 'kairos_cart_v1';
+const KEY = 'kairos_cart_v2';
 
 export function readCart(): CartLine[] {
   if (typeof window === 'undefined') return [];
@@ -50,7 +50,7 @@ export function clearCart() {
 }
 
 export function cartTotal(lines: CartLine[]): number {
-  return lines.reduce((acc, l) => acc + l.priceCents * l.quantity, 0);
+  return lines.reduce((acc, l) => acc + l.price * l.quantity, 0);
 }
 
 export function cartCount(lines: CartLine[]): number {

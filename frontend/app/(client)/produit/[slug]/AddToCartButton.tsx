@@ -12,9 +12,9 @@ export default function AddToCartButton({ product }: { product: Product }) {
     addToCart({
       productId: product.id,
       name: product.name,
-      priceCents: product.priceCents,
+      price: product.price,
       quantity: qty,
-      imageUrl: product.imageUrl || undefined,
+      image: product.image || undefined,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -37,11 +37,7 @@ export default function AddToCartButton({ product }: { product: Product }) {
           +
         </button>
       </div>
-      <button
-        className="btn btn-primary"
-        disabled={product.stock <= 0}
-        onClick={handleAdd}
-      >
+      <button className="btn btn-primary" disabled={product.stock <= 0} onClick={handleAdd}>
         {added ? '✓ Ajouté' : 'Ajouter au panier'}
       </button>
     </div>
