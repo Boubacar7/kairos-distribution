@@ -3,9 +3,9 @@
     "hero": {
       "type": "image-banner",
       "settings": {
-        "title": "Mybodygoal",
-        "subtitle": "By Kairos.Distribution",
-        "eyebrow": "Beauté · Silhouette · Confiance",
+        "line_1": "Mybodygoal",
+        "line_2": "By Kairos.Distribution",
+        "line_3": "Beauté · Silhouette · Confiance",
         "button_1_label": "Voir les produits →",
         "button_1_link": "#produits",
         "button_2_label": "Avis clients",

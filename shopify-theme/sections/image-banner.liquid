@@ -1,3 +1,8 @@
+{%- assign nav_h_desktop = 70 -%}
+{%- assign nav_h_mobile  = 58 -%}
+{%- assign pad_x_desktop = 48 -%}
+{%- assign pad_x_mobile  = 16 -%}
+
 <section class="hero-cover" id="top">
   {%- if section.settings.image -%}
     <img
@@ -10,7 +15,7 @@
         {{ section.settings.image | image_url: width: 1920 }} 1920w
       "
       sizes="100vw"
-      alt="{{ section.settings.image.alt | default: section.settings.title }}"
+      alt="{{ section.settings.image.alt | default: section.settings.line_1 }}"
       width="{{ section.settings.image.width }}"
       height="{{ section.settings.image.height }}"
       loading="eager"
@@ -19,11 +24,33 @@
     <div class="hero-cover-placeholder"></div>
   {%- endif -%}
 
+  <div class="hero-gradient hero-gradient-top"></div>
+  <div class="hero-gradient hero-gradient-bottom"></div>
+
   <div class="hero-text">
-    <span class="hero-title">{{ section.settings.title }}</span>
-    <span class="hero-sub">{{ section.settings.subtitle }}</span>
-    {%- if section.settings.eyebrow != blank -%}
-      <span class="hero-eyebrow">{{ section.settings.eyebrow }}</span>
+    {%- if section.settings.line_1 != blank -%}
+      <span class="hero-line-1"
+            style="font-size: {{ section.settings.line_1_size | default: 32 }}px;
+                   color: {{ section.settings.line_1_color | default: '#ffffff' }};
+                   font-weight: {{ section.settings.line_1_weight | default: 400 }};">
+        {{ section.settings.line_1 }}
+      </span>
+    {%- endif -%}
+    {%- if section.settings.line_2 != blank -%}
+      <span class="hero-line-2"
+            style="font-size: {{ section.settings.line_2_size | default: 12 }}px;
+                   color: {{ section.settings.line_2_color | default: '#ffffff' }};
+                   font-weight: {{ section.settings.line_2_weight | default: 700 }};">
+        {{ section.settings.line_2 }}
+      </span>
+    {%- endif -%}
+    {%- if section.settings.line_3 != blank -%}
+      <span class="hero-line-3"
+            style="font-size: {{ section.settings.line_3_size | default: 11 }}px;
+                   color: {{ section.settings.line_3_color | default: 'rgba(255,255,255,0.9)' }};
+                   font-weight: {{ section.settings.line_3_weight | default: 600 }};">
+        {{ section.settings.line_3 }}
+      </span>
     {%- endif -%}
   </div>
 
@@ -44,49 +71,106 @@
 </section>
 
 <style>
-  /* Mobile: image remplit le hero (min-height 80vh), object-fit: cover, subject en haut */
+  /* ========= HERO — version pleine image ========= */
+  .hero-cover {
+    position: relative;
+    width: 100%;
+    background: var(--ink);
+    overflow: hidden;
+    line-height: 0;
+  }
+  .hero-cover-image {
+    display: block;
+    width: 100%;
+    height: auto;           /* plein image, jamais rognée */
+    line-height: 0;
+  }
+  .hero-cover-placeholder {
+    width: 100%;
+    aspect-ratio: 868 / 1280;
+    background: linear-gradient(150deg,#521529 0%,#6d1e3a 45%,#8a2d4d 75%,#e8c4bc 100%);
+  }
+
+  /* Dégradés lisibilité nav + CTAs */
+  .hero-gradient {
+    position: absolute;
+    left: 0; right: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .hero-gradient-top {
+    top: 0; height: 38%;
+    background: linear-gradient(to bottom, rgba(20,10,10,.7) 0%, transparent 100%);
+  }
+  .hero-gradient-bottom {
+    bottom: 0; height: 32%;
+    background: linear-gradient(to top, rgba(20,10,10,.7) 0%, transparent 100%);
+  }
+
+  /* Pile de 3 lignes — alignée avec le logo de la nav
+     (même padding gauche que .nav-inner, centré verticalement avec la nav) */
+  .hero-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.05;
+    padding: 14px {{ pad_x_desktop }}px;
+    /* La première ligne tombe dans la barre nav (hauteur 70px), les deux suivantes dépassent sous la nav */
+    min-height: {{ nav_h_desktop }}px;
+  }
+  .hero-line-1 {
+    font-family: var(--f-display);
+    letter-spacing: -.01em;
+    text-shadow: 0 2px 16px rgba(0,0,0,.8);
+    white-space: nowrap;
+    line-height: 1.05;
+  }
+  .hero-line-2,
+  .hero-line-3 {
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 10px rgba(0,0,0,.8);
+    white-space: nowrap;
+  }
+
+  /* CTAs en bas à gauche */
+  .hero-buttons {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    padding: 0 {{ pad_x_desktop }}px 40px;
+  }
+
   @media (max-width: 720px) {
-    .hero-cover {
-      min-height: 80vh;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero-cover .hero-cover-image {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center top;
-    }
-    .hero-cover-placeholder {
-      position: absolute; inset: 0;
-      background: linear-gradient(150deg,#521529 0%,#6d1e3a 45%,#8a2d4d 75%,#e8c4bc 100%);
-    }
     .hero-text {
-      padding: 80px 16px 0 !important;
-      gap: 8px !important;
+      padding: 10px {{ pad_x_mobile }}px;
+      min-height: {{ nav_h_mobile }}px;
+      gap: 8px;
     }
-    .hero-title { font-size: clamp(22px, 6vw, 32px) !important; }
-    .hero-sub { font-size: 10px !important; }
-    .hero-eyebrow { font-size: 10px !important; }
+    .hero-line-1 {
+      font-size: clamp(22px, 6vw, 28px) !important;
+    }
+    .hero-line-2 { font-size: 10px !important; }
+    .hero-line-3 { font-size: 10px !important; }
     .hero-buttons {
-      padding: 0 16px 28px !important;
-      position: absolute !important;
-      bottom: 0; left: 0; right: 0;
+      padding: 0 {{ pad_x_mobile }}px 24px;
+      gap: 10px;
     }
     .hero-btn-primary, .hero-btn-secondary {
-      padding: 11px 22px !important;
+      padding: 11px 20px !important;
       font-size: 13px !important;
-    }
-  }
-  /* Desktop : image à sa taille naturelle (width 100%, height auto) */
-  @media (min-width: 721px) {
-    .hero-cover-image { width: 100%; height: auto; display: block; }
-    .hero-cover-placeholder {
-      width: 100%;
-      aspect-ratio: 868/1280;
-      background: linear-gradient(150deg,#521529 0%,#6d1e3a 45%,#8a2d4d 75%,#e8c4bc 100%);
     }
   }
 </style>
@@ -96,15 +180,51 @@
   "name": "Hero bannière",
   "settings": [
     { "type": "image_picker", "id": "image", "label": "Image de couverture" },
-    { "type": "text", "id": "title", "label": "Titre (ligne 1)", "default": "Mybodygoal" },
-    { "type": "text", "id": "subtitle", "label": "Sous-titre (ligne 2)", "default": "By Kairos.Distribution" },
-    { "type": "text", "id": "eyebrow", "label": "Ligne 3 (eyebrow)", "default": "Beauté · Silhouette · Confiance" },
+
+    { "type": "header", "content": "Ligne 1 (titre principal)" },
+    { "type": "text", "id": "line_1", "label": "Texte", "default": "Mybodygoal" },
+    { "type": "range", "id": "line_1_size", "label": "Taille (px)", "min": 18, "max": 64, "step": 2, "default": 32 },
+    { "type": "color", "id": "line_1_color", "label": "Couleur", "default": "#ffffff" },
+    { "type": "select", "id": "line_1_weight", "label": "Graisse",
+      "options": [
+        { "value": "300", "label": "Light 300" },
+        { "value": "400", "label": "Regular 400" },
+        { "value": "500", "label": "Medium 500" },
+        { "value": "600", "label": "Semibold 600" },
+        { "value": "700", "label": "Bold 700" }
+      ], "default": "400" },
+
+    { "type": "header", "content": "Ligne 2 (signature)" },
+    { "type": "text", "id": "line_2", "label": "Texte", "default": "By Kairos.Distribution" },
+    { "type": "range", "id": "line_2_size", "label": "Taille (px)", "min": 9, "max": 20, "step": 1, "default": 12 },
+    { "type": "color", "id": "line_2_color", "label": "Couleur", "default": "#ffffff" },
+    { "type": "select", "id": "line_2_weight", "label": "Graisse",
+      "options": [
+        { "value": "400", "label": "Regular 400" },
+        { "value": "500", "label": "Medium 500" },
+        { "value": "600", "label": "Semibold 600" },
+        { "value": "700", "label": "Bold 700" }
+      ], "default": "700" },
+
+    { "type": "header", "content": "Ligne 3 (eyebrow)" },
+    { "type": "text", "id": "line_3", "label": "Texte", "default": "Beauté · Silhouette · Confiance" },
+    { "type": "range", "id": "line_3_size", "label": "Taille (px)", "min": 9, "max": 18, "step": 1, "default": 11 },
+    { "type": "color", "id": "line_3_color", "label": "Couleur", "default": "#ffffff" },
+    { "type": "select", "id": "line_3_weight", "label": "Graisse",
+      "options": [
+        { "value": "400", "label": "Regular 400" },
+        { "value": "500", "label": "Medium 500" },
+        { "value": "600", "label": "Semibold 600" },
+        { "value": "700", "label": "Bold 700" }
+      ], "default": "600" },
+
     { "type": "header", "content": "Bouton principal" },
     { "type": "text", "id": "button_1_label", "label": "Libellé", "default": "Voir les produits →" },
-    { "type": "url", "id": "button_1_link", "label": "Lien" },
+    { "type": "url",  "id": "button_1_link",  "label": "Lien" },
+
     { "type": "header", "content": "Bouton secondaire" },
     { "type": "text", "id": "button_2_label", "label": "Libellé", "default": "Avis clients" },
-    { "type": "url", "id": "button_2_link", "label": "Lien" }
+    { "type": "url",  "id": "button_2_link",  "label": "Lien" }
   ],
   "presets": [{ "name": "Hero bannière" }]
 }
