@@ -1,4 +1,14 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+// Server-side (SSR / RSC) calls run inside the Docker container, where
+// "localhost" refers to the frontend container itself — not the backend.
+// INTERNAL_API_URL lets us route server-side traffic through the internal
+// Docker network (http://backend:4000). In the browser we keep
+// NEXT_PUBLIC_API_URL (typically http://localhost:4000).
+const BASE =
+  typeof window === 'undefined'
+    ? process.env.INTERNAL_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://backend:4000'
+    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 type Options = RequestInit & { token?: string };
 
