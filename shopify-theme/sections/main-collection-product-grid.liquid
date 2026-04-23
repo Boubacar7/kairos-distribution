@@ -1,0 +1,41 @@
+<section class="container screen-enter" style="padding-top: 90px; padding-bottom: 80px;">
+  <div class="breadcrumbs">
+    <a href="{{ routes.root_url }}">{{ 'accessibility.home' | t }}</a>
+    <span>/</span>
+    <span>{{ collection.title }}</span>
+  </div>
+
+  <h1 class="display" style="font-size: clamp(32px, 5.5vw, 56px); margin: 0 0 12px; letter-spacing: -.03em; line-height: 1;">
+    {{ collection.title }}
+  </h1>
+  <p style="color: var(--muted); font-size: 14px; margin-bottom: 28px;">
+    {{ collection.products_count }} produits · livraison 24-72h
+  </p>
+
+  {%- if collection.products.size == 0 -%}
+    <p style="color: var(--muted);">Aucun produit.</p>
+  {%- else -%}
+    <div class="product-grid">
+      {%- paginate collection.products by section.settings.products_per_page -%}
+        {%- for product in collection.products -%}
+          {% render 'card-product', product: product %}
+        {%- endfor -%}
+
+        {%- if paginate.pages > 1 -%}
+          <div style="grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 32px;">
+            {{ paginate | default_pagination }}
+          </div>
+        {%- endif -%}
+      {%- endpaginate -%}
+    </div>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Grille produits",
+  "settings": [
+    { "type": "range", "id": "products_per_page", "label": "Produits par page", "min": 8, "max": 48, "step": 4, "default": 16 }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,62 @@
+<section class="hero-cover">
+  {%- if section.settings.image -%}
+    <img
+      src="{{ section.settings.image | image_url: width: 1920 }}"
+      srcset="
+        {{ section.settings.image | image_url: width: 480 }} 480w,
+        {{ section.settings.image | image_url: width: 800 }} 800w,
+        {{ section.settings.image | image_url: width: 1200 }} 1200w,
+        {{ section.settings.image | image_url: width: 1920 }} 1920w
+      "
+      sizes="100vw"
+      alt="{{ section.settings.image.alt | default: section.settings.title }}"
+      width="{{ section.settings.image.width }}"
+      height="{{ section.settings.image.height }}"
+      loading="eager"
+    >
+  {%- else -%}
+    <div style="width:100%;aspect-ratio:868/1280;background:linear-gradient(150deg,#521529 0%,#6d1e3a 45%,#8a2d4d 75%,#e8c4bc 100%);"></div>
+  {%- endif -%}
+
+  <div class="hero-text">
+    <span class="hero-title">{{ section.settings.title }}</span>
+    <span class="hero-sub">{{ section.settings.subtitle }}</span>
+    {%- if section.settings.eyebrow != blank -%}
+      <span class="hero-eyebrow">{{ section.settings.eyebrow }}</span>
+    {%- endif -%}
+  </div>
+
+  {%- if section.settings.button_1_label != blank or section.settings.button_2_label != blank -%}
+    <div class="hero-buttons">
+      {%- if section.settings.button_1_label != blank -%}
+        <a href="{{ section.settings.button_1_link }}" class="hero-btn-primary">
+          {{ section.settings.button_1_label }}
+        </a>
+      {%- endif -%}
+      {%- if section.settings.button_2_label != blank -%}
+        <a href="{{ section.settings.button_2_link }}" class="hero-btn-secondary">
+          {{ section.settings.button_2_label }}
+        </a>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Hero bannière",
+  "settings": [
+    { "type": "image_picker", "id": "image", "label": "Image de couverture" },
+    { "type": "text", "id": "title", "label": "Titre (ligne 1)", "default": "Mybodygoal" },
+    { "type": "text", "id": "subtitle", "label": "Sous-titre (ligne 2)", "default": "By Kairos.Distribution" },
+    { "type": "text", "id": "eyebrow", "label": "Ligne 3 (eyebrow)", "default": "Beauté · Silhouette · Confiance" },
+    { "type": "header", "content": "Bouton principal" },
+    { "type": "text", "id": "button_1_label", "label": "Libellé", "default": "Voir les produits →" },
+    { "type": "url", "id": "button_1_link", "label": "Lien" },
+    { "type": "header", "content": "Bouton secondaire" },
+    { "type": "text", "id": "button_2_label", "label": "Libellé", "default": "Avis clients" },
+    { "type": "url", "id": "button_2_link", "label": "Lien" }
+  ],
+  "presets": [{ "name": "Hero bannière" }]
+}
+{% endschema %}

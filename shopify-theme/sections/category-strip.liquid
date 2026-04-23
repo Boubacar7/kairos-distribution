@@ -1,0 +1,19 @@
+<div class="cat-strip">
+  <div class="cat-inner">
+    {%- for link in section.settings.menu.links -%}
+      <a href="{{ link.url }}" class="cat-btn{% if link.active %} on{% endif %}">
+        {{ link.title }}
+      </a>
+    {%- endfor -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Bandeau catégories",
+  "settings": [
+    { "type": "link_list", "id": "menu", "label": "Menu catégories", "default": "main-menu" }
+  ],
+  "presets": [{ "name": "Bandeau catégories" }]
+}
+{% endschema %}

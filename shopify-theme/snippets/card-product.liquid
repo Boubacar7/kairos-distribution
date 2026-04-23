@@ -1,0 +1,65 @@
+{% comment %}
+  Product card — Kairos design.
+  Usage: {% render 'card-product', product: product %}
+{% endcomment %}
+{%- assign featured_image = product.featured_image -%}
+{%- assign category = product.type -%}
+{%- assign compare_at = product.compare_at_price -%}
+{%- assign price = product.price -%}
+{%- assign on_sale = false -%}
+{%- if compare_at and compare_at > price -%}{%- assign on_sale = true -%}{%- endif -%}
+
+<a href="{{ product.url }}" class="product-card">
+  <div class="media">
+    {%- if featured_image -%}
+      <img
+        src="{{ featured_image | image_url: width: 600 }}"
+        srcset="
+          {{ featured_image | image_url: width: 300 }} 300w,
+          {{ featured_image | image_url: width: 600 }} 600w,
+          {{ featured_image | image_url: width: 900 }} 900w
+        "
+        sizes="(max-width: 700px) 50vw, (max-width: 1000px) 33vw, 25vw"
+        alt="{{ featured_image.alt | default: product.title }}"
+        width="{{ featured_image.width }}"
+        height="{{ featured_image.height }}"
+        loading="lazy"
+      >
+    {%- else -%}
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#f5d9d3 0%,#e8b8c8 50%,#d6a3b8 100%);"></div>
+    {%- endif -%}
+  </div>
+
+  <div class="chips">
+    {%- if category != blank -%}
+      <span class="chip">{{ category }}</span>
+    {%- else -%}
+      <span></span>
+    {%- endif -%}
+    {%- if on_sale -%}
+      <span class="chip chip-promo" style="font-size:10px;padding:4px 8px;">PROMO</span>
+    {%- endif -%}
+  </div>
+
+  <div class="title">{{ product.title }}</div>
+
+  {%- if product.description != blank -%}
+    <div class="tagline">{{ product.description | strip_html | truncate: 80 }}</div>
+  {%- else -%}
+    <div class="tagline"></div>
+  {%- endif -%}
+
+  <div class="price-row">
+    <div>
+      <span class="price">{{ price | money }}</span>
+      {%- if on_sale -%}
+        <span class="old-price">{{ compare_at | money }}</span>
+      {%- endif -%}
+    </div>
+    <span class="add-btn" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </span>
+  </div>
+</a>

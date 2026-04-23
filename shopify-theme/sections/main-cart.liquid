@@ -1,0 +1,46 @@
+<section class="container screen-enter" style="padding-top: 90px; padding-bottom: 80px; max-width: 900px;">
+  <h1 class="display" style="font-size: clamp(32px, 5vw, 48px); letter-spacing: -.03em;">Panier</h1>
+
+  {%- if cart.item_count == 0 -%}
+    <div style="text-align: center; margin-top: 40px;">
+      <p style="color: var(--muted);">Votre panier est vide.</p>
+      <a href="{{ routes.all_products_collection_url }}" class="btn btn-p" style="margin-top: 16px;">Voir la boutique</a>
+    </div>
+  {%- else -%}
+    <form method="post" action="{{ routes.cart_url }}" style="margin-top: 24px;">
+      <ul style="list-style:none;padding:0;margin:0;border:1px solid var(--line);border-radius:var(--r-lg);background:#fff;">
+        {%- for item in cart.items -%}
+          <li style="display:flex;align-items:center;gap:16px;padding:16px;border-bottom:1px solid var(--line);">
+            {%- if item.image -%}
+              <img src="{{ item.image | image_url: width: 160 }}" alt="{{ item.title }}" width="80" height="80" style="border-radius:var(--r-md);object-fit:cover;">
+            {%- endif -%}
+            <div style="flex:1;">
+              <div style="font-weight:500;">{{ item.product.title }}</div>
+              {%- if item.variant.title != 'Default Title' -%}
+                <div style="color:var(--muted);font-size:13px;">{{ item.variant.title }}</div>
+              {%- endif -%}
+              <div style="color:var(--muted);font-size:13px;">{{ item.price | money }}</div>
+            </div>
+            <input type="number" name="updates[{{ item.key }}]" value="{{ item.quantity }}" min="0" aria-label="Quantité" style="width:60px;padding:6px;border:1px solid var(--line-2);border-radius:var(--r-sm);text-align:center;">
+            <div style="font-weight:600;min-width:90px;text-align:right;">{{ item.final_line_price | money }}</div>
+            <a href="{{ item.url_to_remove }}" style="color:var(--muted);font-size:13px;">Retirer</a>
+          </li>
+        {%- endfor -%}
+      </ul>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--line);border-radius:var(--r-lg);margin-top:16px;background:#fff;">
+        <span style="color:var(--muted);font-size:14px;">Sous-total</span>
+        <span class="display" style="font-size: 28px;">{{ cart.total_price | money }}</span>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:16px;">
+        <button type="submit" name="update" class="btn btn-g">Mettre à jour</button>
+        <button type="submit" name="checkout" class="btn btn-p">Passer commande</button>
+      </div>
+    </form>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{ "name": "Panier", "settings": [] }
+{% endschema %}

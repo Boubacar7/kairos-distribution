@@ -1,0 +1,85 @@
+<section class="container screen-enter">
+  <div class="breadcrumbs">
+    <a href="{{ routes.root_url }}">{{ 'accessibility.home' | t }}</a>
+    <span>/</span>
+    {%- if product.collections.first -%}
+      <a href="{{ product.collections.first.url }}">{{ product.collections.first.title }}</a>
+      <span>/</span>
+    {%- endif -%}
+    <span>{{ product.title }}</span>
+  </div>
+
+  <div class="product-detail">
+    <div class="media">
+      {%- if product.featured_image -%}
+        <img
+          src="{{ product.featured_image | image_url: width: 900 }}"
+          srcset="
+            {{ product.featured_image | image_url: width: 450 }} 450w,
+            {{ product.featured_image | image_url: width: 900 }} 900w,
+            {{ product.featured_image | image_url: width: 1400 }} 1400w
+          "
+          sizes="(max-width: 720px) 100vw, 50vw"
+          alt="{{ product.featured_image.alt | default: product.title }}"
+          width="{{ product.featured_image.width }}"
+          height="{{ product.featured_image.height }}"
+          loading="eager"
+        >
+      {%- else -%}
+        <div style="width:100%;aspect-ratio:1/1;background:linear-gradient(135deg,#f5d9d3 0%,#e8b8c8 50%,#d6a3b8 100%);border-radius:var(--r-lg);"></div>
+      {%- endif -%}
+    </div>
+
+    <div>
+      {%- if product.type != blank -%}
+        <span class="chip" style="margin-bottom:12px;">{{ product.type }}</span>
+      {%- endif -%}
+
+      <h1 class="display title">{{ product.title }}</h1>
+
+      <div style="margin-top:12px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+        <span class="price-big">{{ product.price | money }}</span>
+        {%- if product.compare_at_price and product.compare_at_price > product.price -%}
+          <span class="price-old">{{ product.compare_at_price | money }}</span>
+        {%- endif -%}
+      </div>
+
+      {%- if product.description != blank -%}
+        <div class="desc">{{ product.description }}</div>
+      {%- endif -%}
+
+      <form method="post" action="{{ routes.cart_add_url }}" id="product-form" style="margin-top:28px;">
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+          <div class="qty-stepper">
+            <button type="button" onclick="this.nextElementSibling.innerText = Math.max(1, parseInt(this.nextElementSibling.innerText) - 1); document.querySelector('[name=quantity]').value = this.nextElementSibling.innerText;" aria-label="Moins">−</button>
+            <span>1</span>
+            <button type="button" onclick="this.previousElementSibling.innerText = parseInt(this.previousElementSibling.innerText) + 1; document.querySelector('[name=quantity]').value = this.previousElementSibling.innerText;" aria-label="Plus">+</button>
+          </div>
+          <input type="hidden" name="quantity" value="1">
+          <button type="submit" class="btn btn-p" {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}>
+            {%- if product.selected_or_first_available_variant.available -%}
+              {{ 'products.product.add_to_cart' | t }}
+            {%- else -%}
+              {{ 'products.product.sold_out' | t }}
+            {%- endif -%}
+          </button>
+        </div>
+      </form>
+
+      {%- if product.variants.size > 1 -%}
+        <p style="margin-top:12px;font-size:12px;color:var(--muted);">
+          Variantes disponibles : sélectionnez-en une dans le menu déroulant.
+        </p>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Produit",
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,26 @@
+{
+  "accessibility": {
+    "skip_to_text": "Aller au contenu",
+    "home": "Accueil"
+  },
+  "general": {
+    "404": {
+      "subtext": "La page demandée est introuvable.",
+      "link": "Retour à l'accueil"
+    }
+  },
+  "sections": {
+    "header": {
+      "cart": "Panier"
+    },
+    "featured_collection": {
+      "view_all": "Tout voir"
+    }
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Ajouter au panier",
+      "sold_out": "Rupture de stock"
+    }
+  }
+}

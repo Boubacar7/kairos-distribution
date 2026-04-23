@@ -1,0 +1,26 @@
+{
+  "accessibility": {
+    "skip_to_text": "Skip to content",
+    "home": "Home"
+  },
+  "general": {
+    "404": {
+      "subtext": "The requested page could not be found.",
+      "link": "Return home"
+    }
+  },
+  "sections": {
+    "header": {
+      "cart": "Cart"
+    },
+    "featured_collection": {
+      "view_all": "View all"
+    }
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Add to cart",
+      "sold_out": "Sold out"
+    }
+  }
+}

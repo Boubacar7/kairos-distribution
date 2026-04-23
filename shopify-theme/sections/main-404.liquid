@@ -1,0 +1,11 @@
+<section class="container" style="padding-top: 120px; padding-bottom: 80px; text-align: center;">
+  <h1 class="display" style="font-size: clamp(48px, 8vw, 80px); letter-spacing: -.03em;">404</h1>
+  <p style="color: var(--muted); margin-top: 8px;">{{ 'general.404.subtext' | t }}</p>
+  <a href="{{ routes.root_url }}" class="btn btn-p" style="margin-top: 24px;">
+    {{ 'general.404.link' | t }}
+  </a>
+</section>
+
+{% schema %}
+{ "name": "404", "settings": [] }
+{% endschema %}
