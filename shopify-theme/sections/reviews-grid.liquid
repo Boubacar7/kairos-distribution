@@ -1,0 +1,92 @@
+<section class="section-pad bg-cream" id="{{ section.settings.anchor | default: 'avis' }}">
+  <div class="container">
+    <div class="section-heading">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        {%- if section.settings.kicker != blank -%}
+          <span class="kicker">{{ section.settings.kicker }}</span>
+        {%- endif -%}
+        <h2 class="display">{{ section.settings.heading }}</h2>
+      </div>
+      {%- if section.settings.rating != blank -%}
+        <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;">
+          <span style="color:var(--bordeaux);">★★★★★</span>
+          <span>{{ section.settings.rating_text | default: 'Moyenne générale' }}</span>
+        </div>
+      {%- endif -%}
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+      {%- for block in section.blocks -%}
+        <div {{ block.shopify_attributes }} style="background:#fff;border-radius:var(--r-lg);padding:20px;border:1px solid var(--line);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:var(--bordeaux);font-size:14px;">
+              {%- assign rating = block.settings.rating | default: 5 -%}
+              {%- for i in (1..5) -%}
+                {%- if i <= rating -%}★{%- else -%}<span style="color:var(--muted-2);">★</span>{%- endif -%}
+              {%- endfor -%}
+            </span>
+          </div>
+          <div class="display" style="font-size:18px;letter-spacing:-.01em;margin-bottom:4px;">{{ block.settings.title }}</div>
+          <p style="font-size:13px;line-height:1.55;color:var(--ink-2);margin:4px 0 16px;">« {{ block.settings.body }} »</p>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--rose-100);color:var(--bordeaux);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">
+              {{ block.settings.author | slice: 0 }}
+            </div>
+            <div style="display:flex;flex-direction:column;">
+              <span style="font-size:13px;font-weight:500;">{{ block.settings.author }}</span>
+              <span style="font-size:11px;color:var(--muted);">{{ block.settings.location }}{% if block.settings.verified %} · Vérifié{% endif %}</span>
+            </div>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+<style>
+  @media (max-width: 700px) {
+    #{{ section.settings.anchor | default: 'avis' }} > div > div:last-child {
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Avis clients",
+  "settings": [
+    { "type": "text", "id": "anchor", "label": "Ancre (id)", "default": "avis", "info": "Sert pour les liens de menu (#avis)" },
+    { "type": "text", "id": "kicker", "label": "Kicker (petit titre)", "default": "Avis clients" },
+    { "type": "text", "id": "heading", "label": "Titre", "default": "4.8/5 · avis vérifiés" },
+    { "type": "text", "id": "rating", "label": "Note globale", "default": "4.8" },
+    { "type": "text", "id": "rating_text", "label": "Texte note", "default": "Moyenne générale" }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Avis",
+      "settings": [
+        { "type": "text", "id": "author", "label": "Auteur", "default": "Safi C." },
+        { "type": "text", "id": "location", "label": "Ville", "default": "Dakar" },
+        { "type": "range", "id": "rating", "label": "Note (1-5)", "min": 1, "max": 5, "step": 1, "default": 5 },
+        { "type": "text", "id": "title", "label": "Titre", "default": "Un vrai coup de cœur" },
+        { "type": "textarea", "id": "body", "label": "Commentaire", "default": "Livraison rapide, emballage soigné et les produits tiennent leurs promesses." },
+        { "type": "checkbox", "id": "verified", "label": "Achat vérifié", "default": true }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [
+    {
+      "name": "Avis clients",
+      "blocks": [
+        { "type": "review", "settings": { "author": "Safi C.", "location": "Dakar", "rating": 5, "title": "Un vrai coup de cœur", "body": "Livraison rapide, emballage soigné et les produits tiennent leurs promesses." } },
+        { "type": "review", "settings": { "author": "Fatou N.", "location": "Abidjan", "rating": 5, "title": "Résultats visibles", "body": "Après 3 semaines de Trim Active, je vois une vraie différence." } },
+        { "type": "review", "settings": { "author": "Massara S.", "location": "Bamako", "rating": 4, "title": "Bon rapport qualité/prix", "body": "Le pack Lip & Glow est parfait pour découvrir la marque." } },
+        { "type": "review", "settings": { "author": "Awa C.", "location": "Cotonou", "rating": 5, "title": "Service impeccable", "body": "Équipe réactive, réponse sous 10 minutes en Snap." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

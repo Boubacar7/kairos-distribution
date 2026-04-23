@@ -1,4 +1,4 @@
-<section class="section-pad">
+<section class="section-pad" id="{{ section.settings.anchor | default: 'produits' }}" style="scroll-margin-top: 80px;">
   <div class="container">
     <div class="section-heading">
       <div style="display:flex;flex-direction:column;gap:6px;">
@@ -32,6 +32,7 @@
 {
   "name": "Collection en vedette",
   "settings": [
+    { "type": "text", "id": "anchor", "label": "Ancre (id)", "default": "produits" },
     { "type": "text", "id": "kicker", "label": "Kicker (petit titre)", "default": "Catalogue" },
     { "type": "text", "id": "heading", "label": "Titre", "default": "Nos rituels du moment" },
     { "type": "collection", "id": "collection", "label": "Collection" },
