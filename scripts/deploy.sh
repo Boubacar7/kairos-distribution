@@ -83,31 +83,40 @@ cmd_status() {
   $DC ps
 }
 
+cmd_export_shopify() {
+  local url="${1:-}"
+  "$ROOT_DIR/scripts/export-shopify.sh" "$url"
+}
+
 usage() {
   cat <<EOF
 Kairos — Déploiement
 
-  up       Build, démarre tous les services, applique migrations + seed
-  down     Arrête les conteneurs (conserve les données)
-  reset    Supprime tous les volumes (données perdues)
-  logs     Suit les logs des services
-  seed     Relance le seed de la base
-  status   État des conteneurs
+  up               Build, démarre tous les services, applique migrations + seed
+  down             Arrête les conteneurs (conserve les données)
+  reset            Supprime tous les volumes (données perdues)
+  logs             Suit les logs des services
+  seed             Relance le seed de la base
+  status           État des conteneurs
+  export-shopify   Exporte les produits au format CSV Shopify
+                   (optionnel : URL publique pour les images)
 
 Exemples :
   ./scripts/deploy.sh up
   ./scripts/deploy.sh logs
   ./scripts/deploy.sh down
+  ./scripts/deploy.sh export-shopify https://kairos.sn
 EOF
 }
 
 case "${1:-up}" in
-  up)     cmd_up ;;
-  down)   cmd_down ;;
-  reset)  cmd_reset ;;
-  logs)   cmd_logs ;;
-  seed)   cmd_seed ;;
-  status) cmd_status ;;
-  -h|--help|help) usage ;;
+  up)              cmd_up ;;
+  down)            cmd_down ;;
+  reset)           cmd_reset ;;
+  logs)            cmd_logs ;;
+  seed)            cmd_seed ;;
+  status)          cmd_status ;;
+  export-shopify)  shift || true; cmd_export_shopify "${1:-}" ;;
+  -h|--help|help)  usage ;;
   *) usage; exit 1 ;;
 esac
