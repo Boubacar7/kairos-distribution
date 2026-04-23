@@ -2,9 +2,9 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="mt-10 bg-bordeaux-dark pt-16 pb-8 text-rose-50">
+    <footer className="mt-10 bg-bordeaux-dark pt-14 pb-8 text-rose-50 md:pt-16">
       <div className="container-app">
-        <div className="mb-10 grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="mb-8 grid gap-8 md:mb-10 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:gap-10">
           <div>
             <div className="font-display text-[26px] text-white">My body goal</div>
             <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-rose-200">By Kairos.Distribution</div>
@@ -16,15 +16,16 @@ export default function Footer() {
           <div className="flex flex-col gap-2.5">
             <span className="kicker text-rose-200">Boutique</span>
             <Link href="/produits" className="text-[13px] text-rose-100 hover:text-white">Produits</Link>
-            <Link href="/produits?filter=promo" className="text-[13px] text-rose-100 hover:text-white">Promos</Link>
-            <Link href="/produits?filter=coffrets" className="text-[13px] text-rose-100 hover:text-white">Coffrets</Link>
+            <Link href="/produits?cat=Promo" className="text-[13px] text-rose-100 hover:text-white">Promos</Link>
+            <Link href="/#avis" className="text-[13px] text-rose-100 hover:text-white">Avis clients</Link>
+            <Link href="/#retours" className="text-[13px] text-rose-100 hover:text-white">Retours clients</Link>
           </div>
 
           <div className="flex flex-col gap-2.5">
             <span className="kicker text-rose-200">Service</span>
             <Link href="/support" className="text-[13px] text-rose-100 hover:text-white">WhatsApp / Snap</Link>
             <Link href="/compte" className="text-[13px] text-rose-100 hover:text-white">Suivi commande</Link>
-            <Link href="/support" className="text-[13px] text-rose-100 hover:text-white">Retours</Link>
+            <Link href="/support" className="text-[13px] text-rose-100 hover:text-white">Retours & remboursement</Link>
           </div>
 
           <div className="flex flex-col gap-2.5">
@@ -35,7 +36,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-bordeaux/30 pt-5 text-[11px] text-rose-100">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/15 pt-5 text-[11px] text-rose-100">
           <span>© {new Date().getFullYear()} My body goal By Kairos.Distribution</span>
           <span>Tous droits réservés</span>
         </div>

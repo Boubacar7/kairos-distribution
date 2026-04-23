@@ -14,6 +14,24 @@ async function getFeatured(): Promise<Product[]> {
   }
 }
 
+const REVIEWS = [
+  { a: 'Safi C.', c: 'Dakar', t: 'Un vrai coup de cœur', r: 5, b: 'Livraison rapide, emballage soigné et les produits tiennent leurs promesses. La crème Glow Skin est devenue mon indispensable.' },
+  { a: 'Fatou N.', c: 'Abidjan', t: 'Résultats visibles', r: 5, b: 'Après 3 semaines de Trim Active, je vois une vraie différence. Le suivi WhatsApp m’a aidée à tenir la routine.' },
+  { a: 'Massara S.', c: 'Bamako', t: 'Bon rapport qualité/prix', r: 4, b: 'Le pack Lip & Glow est parfait pour découvrir la marque. Seul bémol : j’aurais aimé une version plus grande.' },
+  { a: 'Awa C.', c: 'Cotonou', t: 'Service impeccable', r: 5, b: 'Équipe réactive, réponse sous 10 minutes en Snap. Je recommande les yeux fermés.' },
+];
+
+const COMMUNITY_PHOTOS = [
+  '/community/1.jpg',
+  '/community/2.jpg',
+  '/community/3.jpg',
+  '/community/4.jpg',
+  '/community/1.jpg',
+  '/community/2.jpg',
+  '/community/3.jpg',
+  '/community/4.jpg',
+];
+
 export default async function Home() {
   const featured = await getFeatured();
 
@@ -21,40 +39,44 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        {/* ── Full-bleed image hero ── */}
-        <section className="relative block w-full overflow-hidden bg-ink">
+        {/* ── Hero image banner ── */}
+        <section
+          id="top"
+          className="relative flex w-full items-end justify-start overflow-hidden bg-ink"
+          style={{ minHeight: '80vh' }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/cover.jpg"
             alt="My body goal"
-            className="block h-auto w-full"
+            className="absolute inset-0 h-full w-full object-cover md:object-cover"
+            style={{ objectPosition: 'center top' }}
           />
 
-          {/* Top gradient overlay for nav legibility */}
+          {/* Gradient overlays */}
           <div
             aria-hidden
             className="pointer-events-none absolute left-0 right-0 top-0 h-[45%]"
             style={{ background: 'linear-gradient(to bottom, rgba(20,10,10,0.65) 0%, transparent 100%)' }}
           />
-          {/* Bottom gradient overlay for CTAs */}
           <div
             aria-hidden
             className="pointer-events-none absolute bottom-0 left-0 right-0 h-[40%]"
             style={{ background: 'linear-gradient(to top, rgba(20,10,10,0.65) 0%, transparent 100%)' }}
           />
 
-          {/* Top-left stacked title */}
-          <div className="absolute left-0 top-0 z-20 flex flex-col gap-3.5 px-4 py-3.5 md:px-12 md:py-[14px]">
+          {/* Top-left title stack */}
+          <div className="absolute left-0 top-[58px] z-20 flex flex-col gap-2 px-4 py-4 md:top-[70px] md:gap-3.5 md:px-12">
             <span
               className="font-display text-white"
-              style={{ fontSize: 'clamp(24px,4vw,32px)', lineHeight: 1.05, textShadow: '0 2px 16px rgba(0,0,0,.8)' }}
+              style={{ fontSize: 'clamp(22px,5vw,32px)', lineHeight: 1.05, textShadow: '0 2px 16px rgba(0,0,0,.8)' }}
             >
               Mybodygoal
             </span>
             <span
               className="text-white"
               style={{
-                fontSize: 'clamp(10px,1.2vw,12px)',
+                fontSize: 'clamp(9px,1.6vw,12px)',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
@@ -66,7 +88,7 @@ export default async function Home() {
             <span
               className="text-white/90"
               style={{
-                fontSize: 'clamp(10px,1.1vw,11px)',
+                fontSize: 'clamp(9px,1.4vw,11px)',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 fontWeight: 600,
@@ -78,16 +100,16 @@ export default async function Home() {
           </div>
 
           {/* Bottom-left CTAs */}
-          <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-wrap items-end gap-3 px-4 pb-7 md:px-12 md:pb-10">
+          <div className="relative z-10 flex w-full flex-wrap items-end gap-3 px-4 pb-7 md:px-12 md:pb-10">
             <Link
-              href="/produits"
-              className="rounded-pill bg-white px-7 py-3.5 text-sm font-bold text-bordeaux shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition hover:scale-105"
+              href="#produits"
+              className="rounded-pill bg-white px-5 py-3 text-[13px] font-bold text-bordeaux shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition hover:scale-105 md:px-7 md:py-3.5 md:text-sm"
             >
               Voir les produits →
             </Link>
             <Link
-              href="/compte"
-              className="rounded-pill border-[1.5px] border-white/50 bg-transparent px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              href="#avis"
+              className="rounded-pill border-[1.5px] border-white/50 bg-transparent px-5 py-3 text-[13px] font-semibold text-white transition hover:bg-white/10 md:px-7 md:py-3.5 md:text-sm"
             >
               Avis clients
             </Link>
@@ -97,12 +119,12 @@ export default async function Home() {
         {/* ── Category strip ── */}
         <CategoryStrip />
 
-        {/* ── Catalogue preview ── */}
-        <section className="container-app py-16 md:py-20">
+        {/* ── Products ── */}
+        <section id="produits" className="container-app scroll-mt-20 py-14 md:py-20">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-col gap-1.5">
               <span className="kicker">Catalogue</span>
-              <h2 className="font-display text-[clamp(28px,4.5vw,48px)] -tracking-[0.025em]">
+              <h2 className="font-display text-[clamp(26px,4.5vw,48px)] -tracking-[0.025em]">
                 Nos rituels du moment
               </h2>
             </div>
@@ -127,13 +149,13 @@ export default async function Home() {
           )}
         </section>
 
-        {/* ── Avis ── */}
-        <section className="bg-cream-2 py-14">
+        {/* ── Avis clients ── */}
+        <section id="avis" className="scroll-mt-20 bg-cream-2 py-14 md:py-16">
           <div className="container-app">
             <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
               <div className="flex flex-col gap-1.5">
                 <span className="kicker">Avis clients</span>
-                <h2 className="font-display text-[clamp(24px,3.5vw,40px)] -tracking-[0.02em]">
+                <h2 className="font-display text-[clamp(22px,3.5vw,40px)] -tracking-[0.02em]">
                   4.8/5 · avis vérifiés
                 </h2>
               </div>
@@ -142,14 +164,14 @@ export default async function Home() {
                 <span>Moyenne générale</span>
               </div>
             </div>
-            <div className="grid gap-5 md:grid-cols-2">
-              {[
-                { a: 'Safi C.', c: 'Dakar', t: 'Un vrai coup de cœur', b: 'Livraison rapide, emballage soigné et les produits tiennent leurs promesses. La crème Glow Skin est devenue mon indispensable.' },
-                { a: 'Fatou N.', c: 'Abidjan', t: 'Résultats visibles', b: 'Après 3 semaines de Trim Active, je vois une vraie différence. Le suivi WhatsApp m’a aidée à tenir la routine.' },
-              ].map((r) => (
-                <div key={r.a} className="card relative p-7">
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="text-bordeaux text-sm">★★★★★</span>
+            <div className="grid gap-3 sm:grid-cols-2 md:gap-5">
+              {REVIEWS.map((r) => (
+                <div key={r.a} className="card relative p-5 md:p-7">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-bordeaux text-sm">
+                      {'★'.repeat(r.r)}
+                      <span className="text-muted/40">{'★'.repeat(5 - r.r)}</span>
+                    </span>
                   </div>
                   <div className="font-display text-lg -tracking-[0.01em]">{r.t}</div>
                   <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">« {r.b} »</p>
@@ -165,6 +187,32 @@ export default async function Home() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* ── Retours clients (community photos) ── */}
+        <section id="retours" className="container-app scroll-mt-20 py-14 md:py-20">
+          <div className="mb-7 flex flex-col gap-1.5">
+            <span className="kicker">Retours clients</span>
+            <h2 className="font-display text-[clamp(22px,3.5vw,40px)] -tracking-[0.02em]">
+              Photos partagées par la communauté
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-4">
+            {COMMUNITY_PHOTOS.map((src, i) => (
+              <div
+                key={`${src}-${i}`}
+                className="aspect-square overflow-hidden rounded-md bg-rose-50"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={`Retour client ${i + 1}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition duration-500 hover:scale-105"
+                />
+              </div>
+            ))}
           </div>
         </section>
       </main>
