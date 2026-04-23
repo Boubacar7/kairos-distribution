@@ -44,8 +44,8 @@ cmd_up() {
   ok "Déploiement terminé."
   echo ""
   echo "  Boutique       : http://localhost:3000"
-  echo "  Admin custom   : http://localhost:3000/admin  (admin@kairos.local / kairos2026)"
-  echo "  Directus CMS   : http://localhost:8055        (admin@kairos.local / kairos2026)"
+  echo "  Admin custom   : http://localhost:3000/admin  (admin@kairos.sn / kairos2026)"
+  echo "  Directus CMS   : http://localhost:8055        (admin@kairos.sn / kairos2026)"
   echo "  API            : http://localhost:4000/api"
   echo "  DB             : postgres://kairos:kairos@localhost:5432/kairos"
 }

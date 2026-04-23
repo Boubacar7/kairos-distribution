@@ -33,7 +33,8 @@ Scripts utilitaires pour lancer l'application Kairos.
 ## Accès par défaut
 
 - Boutique : http://localhost:3000
-- Admin : http://localhost:3000/admin — `admin@kairos.local` / `kairos2026`
+- Admin : http://localhost:3000/admin — `admin@kairos.sn` / `kairos2026`
+- Directus CMS : http://localhost:8055 — mêmes identifiants
 - API : http://localhost:4000/api
 - PostgreSQL : `postgres://kairos:kairos@localhost:5432/kairos`
 

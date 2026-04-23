@@ -8,7 +8,7 @@ async function main() {
   await prisma.user.upsert({
     where: { username: 'admin' },
     update: {},
-    create: { username: 'admin', email: 'admin@kairos.local', passwordHash, role: Role.OWNER },
+    create: { username: 'admin', email: 'admin@kairos.sn', passwordHash, role: Role.OWNER },
   });
 
   const products = [

@@ -34,7 +34,7 @@ Accès :
 - PostgreSQL : localhost:5432 (kairos / kairos)
 
 Identifiants par défaut (custom admin et Directus) :
-`admin@kairos.local` / `kairos2026`
+`admin@kairos.sn` / `kairos2026`
 
 ## Pourquoi deux interfaces d'admin ?
 
