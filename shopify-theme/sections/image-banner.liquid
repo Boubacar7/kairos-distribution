@@ -21,7 +21,12 @@
       loading="eager"
     >
   {%- else -%}
-    <div class="hero-cover-placeholder"></div>
+    {%- comment -%}
+      Fallback : image baked-in dans assets/cover.jpg — permet d'afficher une
+      couverture par défaut même sur une boutique Shopify neuve, tant que
+      l'opérateur n'a pas uploadé sa propre photo.
+    {%- endcomment -%}
+    <img class="hero-cover-image" src="{{ 'cover.jpg' | asset_url }}" alt="{{ section.settings.line_1 | default: 'Kairos' }}" loading="eager">
   {%- endif -%}
 
   <div class="hero-gradient hero-gradient-top"></div>

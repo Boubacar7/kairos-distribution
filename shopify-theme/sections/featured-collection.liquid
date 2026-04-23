@@ -23,7 +23,26 @@
         {%- endfor -%}
       </div>
     {%- else -%}
-      <p style="color:var(--muted);font-size:14px;">Aucun produit à afficher.</p>
+      {%- comment -%}
+        Boutique encore vide : on affiche des produits démo baked-in dans le
+        thème. Dès que l'opérateur importe shopify-products.csv et associe
+        une collection (ex. "frontpage"), ce bloc disparaît automatiquement.
+      {%- endcomment -%}
+      <div class="product-grid">
+        {% render 'card-product-demo', handle: 'glow-skin',   title: 'Glow Skin Crème',      category: 'Beauté',      description: "Hydratation intense, éclat visible en 7 jours.", price_label: '24 900 FCFA', compare_label: '32 000 FCFA', image: 'glow-skin.png' %}
+        {% render 'card-product-demo', handle: 'trim-active', title: 'Trim Active Plus',     category: 'Amincissant', description: 'Programme silhouette 28 jours.',                   price_label: '18 500 FCFA', image: 'trim-active.png' %}
+        {% render 'card-product-demo', handle: 'curve-up',    title: 'Curve Up Gel',         category: 'Postérieur',  description: 'Routine tonifiante et raffermissante.',            price_label: '27 500 FCFA', image: 'curve-up.png' %}
+        {% render 'card-product-demo', handle: 'confidence',  title: 'Confidence Kit',       category: 'Promo',       description: 'Rituel complet beauté + silhouette.',              price_label: '54 000 FCFA', compare_label: '72 000 FCFA', image: 'confidence.png' %}
+        {%- if limit > 4 -%}
+          {% render 'card-product-demo', handle: 'shape-mask',  title: 'Shape & Firm Masque', category: 'Postérieur',  description: 'Masque raffermissant express 20 min.',             price_label: '19 900 FCFA', image: 'shape-mask.png' %}
+          {% render 'card-product-demo', handle: 'lip-glow',    title: 'Lip & Glow Set',      category: 'Promo',       description: 'Pack découverte lèvres + visage.',                 price_label: '15 900 FCFA', compare_label: '22 000 FCFA' %}
+          {% render 'card-product-demo', handle: 'velvet-body', title: 'Velvet Body Milk',    category: 'Beauté',      description: 'Lait corps soyeux karité + coco.',                 price_label: '12 900 FCFA' %}
+          {% render 'card-product-demo', handle: 'slim-tea',    title: 'Slim Detox Tea',      category: 'Amincissant', description: 'Infusion drainante 21 jours.',                     price_label: '9 500 FCFA' %}
+        {%- endif -%}
+      </div>
+      <p style="margin-top:24px;color:var(--muted);font-size:12px;font-style:italic;">
+        Aperçu démo — importe <code>shopify-products.csv</code> puis lie une collection pour passer en réel.
+      </p>
     {%- endif -%}
   </div>
 </section>
