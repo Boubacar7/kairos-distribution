@@ -1,0 +1,24 @@
+<section class="container screen-enter" style="padding-top: 90px; padding-bottom: 80px;">
+  <h1 class="display" style="font-size: clamp(32px, 5vw, 48px); letter-spacing: -.03em;">Recherche</h1>
+
+  <form method="get" action="{{ routes.search_url }}" style="margin: 24px 0;">
+    <input type="search" name="q" value="{{ search.terms | escape }}" placeholder="Rechercher un produit…" style="width: 100%; padding: 14px 20px; border: 1px solid var(--line-2); border-radius: var(--r-pill); font-size: 15px; font-family: inherit;">
+  </form>
+
+  {%- if search.performed -%}
+    <p style="color: var(--muted); font-size: 14px;">{{ search.results_count }} résultat(s) pour « {{ search.terms }} »</p>
+    {%- if search.results_count > 0 -%}
+      <div class="product-grid" style="margin-top: 20px;">
+        {%- for item in search.results -%}
+          {%- if item.object_type == 'product' -%}
+            {% render 'card-product', product: item %}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+</section>
+
+{% schema %}
+{ "name": "Recherche", "settings": [] }
+{% endschema %}

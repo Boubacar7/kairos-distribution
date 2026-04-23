@@ -1,0 +1,22 @@
+<section class="container screen-enter" style="padding-top: 90px; padding-bottom: 80px;">
+  <h1 class="display" style="font-size: clamp(32px, 5.5vw, 56px); letter-spacing: -.03em;">Collections</h1>
+  <div class="product-grid" style="margin-top: 28px;">
+    {%- for collection in collections -%}
+      <a href="{{ collection.url }}" class="product-card" style="text-align:center;">
+        <div class="media">
+          {%- if collection.featured_image -%}
+            <img src="{{ collection.featured_image | image_url: width: 600 }}" alt="{{ collection.title }}">
+          {%- else -%}
+            <div style="width:100%;height:100%;background:linear-gradient(135deg,#f5d9d3 0%,#e8b8c8 50%,#d6a3b8 100%);"></div>
+          {%- endif -%}
+        </div>
+        <div class="title" style="margin-top:8px;">{{ collection.title }}</div>
+        <div class="tagline">{{ collection.products_count }} produits</div>
+      </a>
+    {%- endfor -%}
+  </div>
+</section>
+
+{% schema %}
+{ "name": "Liste collections", "settings": [] }
+{% endschema %}

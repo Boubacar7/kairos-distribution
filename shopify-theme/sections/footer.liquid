@@ -1,0 +1,65 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="ftr-grid">
+      <div>
+        <div class="ftr-brand">{{ section.settings.brand_line_1 | default: shop.name }}</div>
+        <div class="ftr-sub">{{ section.settings.brand_line_2 }}</div>
+        <p>{{ section.settings.about_text }}</p>
+      </div>
+
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+        {%- when 'link_column' -%}
+          <div {{ block.shopify_attributes }}>
+            <span class="kicker">{{ block.settings.heading }}</span>
+            {%- for link in block.settings.menu.links -%}
+              <div><a href="{{ link.url }}">{{ link.title }}</a></div>
+            {%- endfor -%}
+          </div>
+        {%- when 'text_column' -%}
+          <div {{ block.shopify_attributes }}>
+            <span class="kicker">{{ block.settings.heading }}</span>
+            {{ block.settings.content }}
+          </div>
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+
+    <div class="ftr-bottom">
+      <span>© {{ 'now' | date: '%Y' }} {{ section.settings.brand_line_1 | default: shop.name }}</span>
+      <span>{{ section.settings.legal }}</span>
+    </div>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "settings": [
+    { "type": "text", "id": "brand_line_1", "label": "Ligne 1", "default": "My body goal" },
+    { "type": "text", "id": "brand_line_2", "label": "Ligne 2", "default": "By Kairos.Distribution" },
+    { "type": "textarea", "id": "about_text", "label": "À propos", "default": "Beauté, silhouette et confiance. Expédition partout dans le monde." },
+    { "type": "text", "id": "legal", "label": "Mention bas", "default": "Tous droits réservés" }
+  ],
+  "blocks": [
+    {
+      "type": "link_column",
+      "name": "Colonne liens",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Titre", "default": "Boutique" },
+        { "type": "link_list", "id": "menu", "label": "Menu" }
+      ]
+    },
+    {
+      "type": "text_column",
+      "name": "Colonne texte",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Titre", "default": "Livraison" },
+        { "type": "richtext", "id": "content", "label": "Contenu", "default": "<p>Partout dans le monde</p><p>Expédition 24-72h</p>" }
+      ]
+    }
+  ],
+  "max_blocks": 4,
+  "presets": [{ "name": "Footer" }]
+}
+{% endschema %}

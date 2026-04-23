@@ -1,0 +1,65 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "Kairos",
+    "theme_version": "1.0.0",
+    "theme_author": "Kairos Distribution",
+    "theme_documentation_url": "https://github.com/Boubacar7/kairos-distribution/tree/main/shopify-theme",
+    "theme_support_url": "mailto:support@kairos.sn"
+  },
+  {
+    "name": "Couleurs",
+    "settings": [
+      {
+        "type": "color",
+        "id": "color_bordeaux",
+        "label": "Bordeaux (primaire)",
+        "default": "#6d1e3a"
+      },
+      {
+        "type": "color",
+        "id": "color_bordeaux_dark",
+        "label": "Bordeaux foncé",
+        "default": "#521529"
+      },
+      {
+        "type": "color",
+        "id": "color_rose",
+        "label": "Rose poudré",
+        "default": "#f5d9d3"
+      },
+      {
+        "type": "color",
+        "id": "color_cream",
+        "label": "Crème (fond secondaire)",
+        "default": "#fbf4ef"
+      },
+      {
+        "type": "color",
+        "id": "color_ink",
+        "label": "Encre (texte principal)",
+        "default": "#1a1414"
+      }
+    ]
+  },
+  {
+    "name": "Typographie",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Ce thème charge Fraunces (titres) et Inter (UI) depuis Google Fonts. Pour changer, édite layout/theme.liquid."
+      }
+    ]
+  },
+  {
+    "name": "Identité",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon",
+        "info": "32×32 px"
+      }
+    ]
+  }
+]

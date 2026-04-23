@@ -1,0 +1,33 @@
+{
+  "sections": {
+    "hero": {
+      "type": "image-banner",
+      "settings": {
+        "title": "Mybodygoal",
+        "subtitle": "By Kairos.Distribution",
+        "eyebrow": "Beauté · Silhouette · Confiance",
+        "button_1_label": "Voir les produits →",
+        "button_1_link": "/collections/all",
+        "button_2_label": "Avis clients",
+        "button_2_link": "/pages/avis"
+      }
+    },
+    "categories": {
+      "type": "category-strip",
+      "settings": {
+        "menu": "main-menu"
+      }
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": {
+        "kicker": "Catalogue",
+        "heading": "Nos rituels du moment",
+        "collection": "frontpage",
+        "products_to_show": 4,
+        "view_all_link": "/collections/all"
+      }
+    }
+  },
+  "order": ["hero", "categories", "featured"]
+}

@@ -1,0 +1,34 @@
+{
+  "type": "footer",
+  "name": "Footer group",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "boutique": {
+          "type": "link_column",
+          "settings": {
+            "heading": "Boutique",
+            "menu": "footer"
+          }
+        },
+        "service": {
+          "type": "text_column",
+          "settings": {
+            "heading": "Service",
+            "content": "<p>WhatsApp / Snap</p><p>Suivi commande</p><p>Retours</p>"
+          }
+        },
+        "livraison": {
+          "type": "text_column",
+          "settings": {
+            "heading": "Livraison",
+            "content": "<p>Partout dans le monde</p><p>Expédition 24-72h</p><p>Wave · Moov · CB</p>"
+          }
+        }
+      },
+      "block_order": ["boutique", "service", "livraison"]
+    }
+  },
+  "order": ["footer"]
+}
