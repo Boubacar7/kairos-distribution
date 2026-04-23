@@ -27,9 +27,25 @@ docker-compose up --build
 ```
 
 Accès :
-- Frontend : http://localhost:3000
+- Boutique : http://localhost:3000
+- Admin custom : http://localhost:3000/admin
+- **Directus CMS** : http://localhost:8055 — interface conviviale pour les non-techniciens
 - Backend (API) : http://localhost:4000
 - PostgreSQL : localhost:5432 (kairos / kairos)
+
+Identifiants par défaut (custom admin et Directus) :
+`admin@kairos.local` / `kairos2026`
+
+## Pourquoi deux interfaces d'admin ?
+
+- **`/admin`** (Next.js) : back-office sur-mesure, accordé au design Kairos.
+- **Directus** (`:8055`) : CMS open-source qui se connecte directement à la base
+  Postgres existante. Idéal pour un opérateur non-technique : gestion produits,
+  upload d'images, modération des avis, suivi commandes en quelques clics.
+
+À la première connexion à Directus, va dans **Settings → Data Model** et
+clique sur "Create Collection from Existing Table" pour exposer Product,
+Order, Review, etc.
 
 ## Installation manuelle
 

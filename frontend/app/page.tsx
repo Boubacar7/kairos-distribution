@@ -27,7 +27,7 @@ export default async function Home() {
           <img
             src="/cover.jpg"
             alt="My body goal"
-            className="block h-[100svh] w-full object-cover md:h-[90vh]"
+            className="block h-auto w-full"
           />
 
           {/* Top gradient overlay for nav legibility */}

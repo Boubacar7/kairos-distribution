@@ -43,10 +43,11 @@ cmd_up() {
   $DC exec -T backend npm run seed || warn "Seed ignoré (déjà présent ?)"
   ok "Déploiement terminé."
   echo ""
-  echo "  Boutique : http://localhost:3000"
-  echo "  Admin    : http://localhost:3000/admin  (admin@kairos.local / kairos2026)"
-  echo "  API      : http://localhost:4000/api"
-  echo "  DB       : postgres://kairos:kairos@localhost:5432/kairos"
+  echo "  Boutique       : http://localhost:3000"
+  echo "  Admin custom   : http://localhost:3000/admin  (admin@kairos.local / kairos2026)"
+  echo "  Directus CMS   : http://localhost:8055        (admin@kairos.local / kairos2026)"
+  echo "  API            : http://localhost:4000/api"
+  echo "  DB             : postgres://kairos:kairos@localhost:5432/kairos"
 }
 
 cmd_down() {
