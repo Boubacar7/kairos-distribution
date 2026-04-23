@@ -5,6 +5,11 @@
 
 <header class="site-header{% if is_home %} is-home is-transparent{% else %} is-opaque{% endif %}" data-is-home="{{ is_home }}">
   <div class="nav-inner">
+    {%- comment -%}
+      Sur la home (tant que la nav est transparente), on masque le bloc marque du header :
+      la bannière contient déjà les 3 lignes en haut à gauche, alignées sur l'axe de la nav.
+      Dès qu'on scrolle (nav opaque), le bloc marque réapparaît.
+    {%- endcomment -%}
     <a href="{{ routes.root_url }}" class="brand-wrap" style="display:flex;flex-direction:column;">
       <span class="nav-brand">{{ section.settings.brand_line_1 | default: shop.name }}</span>
       <span class="nav-sub">{{ section.settings.brand_line_2 }}</span>
@@ -54,6 +59,12 @@
 </header>
 
 <style>
+  /* Sur la home tant qu'on est en nav transparente, le bloc marque s'efface
+     pour laisser la place à la pile de 3 lignes du hero. */
+  .site-header.is-home.is-transparent .brand-wrap {
+    opacity: 0;
+    pointer-events: none;
+  }
   .nav-mobile-btn {
     display: none;
     padding: 8px;
@@ -102,7 +113,6 @@
     var header = document.querySelector('.site-header');
     if (!header) return;
 
-    // Mobile menu
     var btn = header.querySelector('[data-mobile-menu]');
     var panel = header.querySelector('[data-mobile-panel]');
     if (btn && panel) {
@@ -130,7 +140,6 @@
       });
     }
 
-    // Scroll-spy (home only)
     var isHome = header.getAttribute('data-is-home') === 'true';
     if (!isHome) return;
 

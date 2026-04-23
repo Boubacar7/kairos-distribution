@@ -41,48 +41,57 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        {/* ── Hero image banner ── */}
-        <section
-          id="top"
-          className="relative flex w-full items-end justify-start overflow-hidden bg-ink"
-          style={{ minHeight: '80vh' }}
-        >
+        {/* ── Hero image banner (full-bleed, image entière visible) ── */}
+        <section id="top" className="relative block w-full overflow-hidden bg-ink">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/cover.jpg"
             alt="My body goal"
-            className="absolute inset-0 h-full w-full object-cover md:object-cover"
-            style={{ objectPosition: 'center top' }}
+            className="block h-auto w-full"
           />
 
-          {/* Gradient overlays */}
+          {/* Dégradés de lisibilité */}
           <div
             aria-hidden
-            className="pointer-events-none absolute left-0 right-0 top-0 h-[45%]"
-            style={{ background: 'linear-gradient(to bottom, rgba(20,10,10,0.65) 0%, transparent 100%)' }}
+            className="pointer-events-none absolute left-0 right-0 top-0 h-[38%]"
+            style={{ background: 'linear-gradient(to bottom, rgba(20,10,10,0.7) 0%, transparent 100%)' }}
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute bottom-0 left-0 right-0 h-[40%]"
-            style={{ background: 'linear-gradient(to top, rgba(20,10,10,0.65) 0%, transparent 100%)' }}
+            className="pointer-events-none absolute bottom-0 left-0 right-0 h-[32%]"
+            style={{ background: 'linear-gradient(to top, rgba(20,10,10,0.7) 0%, transparent 100%)' }}
           />
 
-          {/* Top-left title stack */}
-          <div className="absolute left-0 top-[58px] z-20 flex flex-col gap-2 px-4 py-4 md:top-[70px] md:gap-3.5 md:px-12">
+          {/*
+            Pile de 3 lignes, alignée avec le logo de la nav :
+              - même padding gauche que la nav (16px mobile, 48px desktop)
+              - première ligne centrée dans la barre nav (h=58 mobile, h=70 desktop)
+              - lignes 2 et 3 dépassent sous la nav
+          */}
+          <div
+            className="absolute left-0 right-0 top-0 z-[60] flex min-h-[58px] flex-col items-start gap-1.5 px-4 py-2.5 md:min-h-[70px] md:gap-2 md:px-12 md:py-3.5"
+          >
             <span
               className="font-display text-white"
-              style={{ fontSize: 'clamp(22px,5vw,32px)', lineHeight: 1.05, textShadow: '0 2px 16px rgba(0,0,0,.8)' }}
+              style={{
+                fontSize: 'clamp(22px,5vw,32px)',
+                lineHeight: 1.05,
+                letterSpacing: '-0.01em',
+                textShadow: '0 2px 16px rgba(0,0,0,.8)',
+                whiteSpace: 'nowrap',
+              }}
             >
               Mybodygoal
             </span>
             <span
               className="text-white"
               style={{
-                fontSize: 'clamp(9px,1.6vw,12px)',
+                fontSize: 'clamp(10px,1.6vw,12px)',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
                 textShadow: '0 1px 10px rgba(0,0,0,.8)',
+                whiteSpace: 'nowrap',
               }}
             >
               By Kairos.Distribution
@@ -95,14 +104,15 @@ export default async function Home() {
                 textTransform: 'uppercase',
                 fontWeight: 600,
                 textShadow: '0 1px 10px rgba(0,0,0,.8)',
+                whiteSpace: 'nowrap',
               }}
             >
               Beauté · Silhouette · Confiance
             </span>
           </div>
 
-          {/* Bottom-left CTAs */}
-          <div className="relative z-10 flex w-full flex-wrap items-end gap-3 px-4 pb-7 md:px-12 md:pb-10">
+          {/* CTAs en bas à gauche */}
+          <div className="absolute bottom-0 left-0 right-0 z-[55] flex flex-wrap items-end gap-3 px-4 pb-6 md:px-12 md:pb-10">
             <Link
               href="#produits"
               className="rounded-pill bg-white px-5 py-3 text-[13px] font-bold text-bordeaux shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition hover:scale-105 md:px-7 md:py-3.5 md:text-sm"
