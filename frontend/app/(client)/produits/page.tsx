@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
 import { api, Product } from '@/lib/api';
+import { FALLBACK_PRODUCTS } from '@/lib/fallback-products';
 
 const CATS = [
   { id: 'all', label: 'Tous' },
@@ -12,10 +13,12 @@ const CATS = [
 
 async function getProducts(): Promise<Product[]> {
   try {
-    return await api.get<Product[]>('/products?status=PUBLISHED');
+    const items = await api.get<Product[]>('/products?status=PUBLISHED');
+    if (items.length > 0) return items;
   } catch {
-    return [];
+    // ignored — fall through to static fallback
   }
+  return FALLBACK_PRODUCTS;
 }
 
 export default async function ProduitsPage({

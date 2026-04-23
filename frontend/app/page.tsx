@@ -4,14 +4,16 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import CategoryStrip from '@/components/CategoryStrip';
 import { api, Product } from '@/lib/api';
+import { FALLBACK_PRODUCTS } from '@/lib/fallback-products';
 
 async function getFeatured(): Promise<Product[]> {
   try {
     const items = await api.get<Product[]>('/products?status=PUBLISHED');
-    return items.slice(0, 4);
+    if (items.length > 0) return items.slice(0, 4);
   } catch {
-    return [];
+    // ignored — fall through to static fallback
   }
+  return FALLBACK_PRODUCTS.slice(0, 4);
 }
 
 const REVIEWS = [
@@ -136,17 +138,11 @@ export default async function Home() {
             </Link>
           </div>
 
-          {featured.length === 0 ? (
-            <div className="rounded-lg border border-line-soft bg-cream py-12 text-center text-sm text-muted">
-              Catalogue bientôt disponible.
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
-              {featured.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+            {featured.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
         </section>
 
         {/* ── Avis clients ── */}
