@@ -45,12 +45,17 @@
             <div class="price-row">
               <div>
                 {%- if b.price_fcfa and b.price_fcfa > 0 -%}
-                  <span class="price" data-price-fcfa="{{ b.price_fcfa }}">{{ b.price_fcfa }}</span>
+                  {%- comment -%}Rendu initial en FCFA (espace comme séparateur de milliers).{%- endcomment -%}
+                  <span class="price" data-price-fcfa="{{ b.price_fcfa }}">
+                    {{- b.price_fcfa | times: 1 }} FCFA
+                  </span>
                 {%- else -%}
                   <span class="price">{{ b.price_label }}</span>
                 {%- endif -%}
                 {%- if b.compare_fcfa and b.compare_fcfa > 0 -%}
-                  <span class="old-price" data-compare-fcfa="{{ b.compare_fcfa }}">{{ b.compare_fcfa }}</span>
+                  <span class="old-price" data-compare-fcfa="{{ b.compare_fcfa }}">
+                    {{- b.compare_fcfa | times: 1 }} FCFA
+                  </span>
                 {%- elsif b.compare_label != blank -%}
                   <span class="old-price">{{ b.compare_label }}</span>
                 {%- endif -%}
@@ -76,12 +81,12 @@
                   <h2 class="display">{{ b.title }}</h2>
                   <div class="detail-price">
                     {%- if b.price_fcfa and b.price_fcfa > 0 -%}
-                      <span class="price-big" data-price-fcfa="{{ b.price_fcfa }}">{{ b.price_fcfa }}</span>
+                      <span class="price-big" data-price-fcfa="{{ b.price_fcfa }}">{{ b.price_fcfa }} FCFA</span>
                     {%- else -%}
                       <span class="price-big">{{ b.price_label }}</span>
                     {%- endif -%}
                     {%- if b.compare_fcfa and b.compare_fcfa > 0 -%}
-                      <span class="price-old" data-compare-fcfa="{{ b.compare_fcfa }}">{{ b.compare_fcfa }}</span>
+                      <span class="price-old" data-compare-fcfa="{{ b.compare_fcfa }}">{{ b.compare_fcfa }} FCFA</span>
                     {%- elsif b.compare_label != blank -%}
                       <span class="price-old">{{ b.compare_label }}</span>
                     {%- endif -%}
@@ -249,6 +254,16 @@
       if (e.key === 'Escape' && !modal.hasAttribute('hidden')) close();
     });
   })();
+
+  // Applique immédiatement la devise active aux cartes (utile quand une
+  // nouvelle carte vient d'être ajoutée dans le Customizer).
+  (function waitCurrency() {
+    if (typeof window.kairosApplyCurrency === 'function') {
+      window.kairosApplyCurrency(window.kairosGetCurrency());
+    } else {
+      setTimeout(waitCurrency, 50);
+    }
+  })();
 </script>
 
 {% schema %}
@@ -273,14 +288,16 @@
         { "type": "textarea", "id": "description",  "label": "Accroche (tagline)", "info": "Texte court affiché sous le nom" },
         { "type": "richtext", "id": "details",      "label": "Description complète", "info": "Affichée dans le popup produit (clic)" },
 
-        { "type": "header", "content": "Prix — saisie en FCFA (conversion auto)" },
+        { "type": "header", "content": "Prix (en FCFA — conversion automatique EUR/USD/CAD)" },
         { "type": "number", "id": "price_fcfa",   "label": "Prix actuel (FCFA)",
-          "info": "Laisse vide pour utiliser le libellé manuel ci-dessous" },
-        { "type": "number", "id": "compare_fcfa", "label": "Ancien prix (FCFA, barré)", "info": "Active automatiquement le badge PROMO" },
+          "info": "Exemple : 24900 pour 24 900 FCFA. La devise choisie par le visiteur est appliquée automatiquement." },
+        { "type": "number", "id": "compare_fcfa", "label": "Ancien prix (FCFA) — barré",
+          "info": "Exemple : 32000. Active automatiquement le badge PROMO." },
 
-        { "type": "header", "content": "Prix — libellés manuels (fallback)" },
-        { "type": "text",   "id": "price_label",   "label": "Prix", "default": "24 900 FCFA", "info": "Utilisé si prix FCFA vide" },
-        { "type": "text",   "id": "compare_label", "label": "Ancien prix", "info": "Utilisé si ancien prix FCFA vide" },
+        { "type": "header", "content": "Alternative : prix en texte libre" },
+        { "type": "paragraph", "content": "Utilise ces champs UNIQUEMENT si tu préfères écrire le prix toi-même (pas de conversion de devise)." },
+        { "type": "text",   "id": "price_label",   "label": "Prix (texte libre)", "info": "Ignoré si Prix actuel (FCFA) est rempli" },
+        { "type": "text",   "id": "compare_label", "label": "Ancien prix (texte libre)" },
 
         { "type": "header", "content": "Lien" },
         { "type": "url",    "id": "link",          "label": "Lien vers fiche complète", "info": "Ex. /products/glow-skin — affiché dans le popup" }

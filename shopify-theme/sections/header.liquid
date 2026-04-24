@@ -16,15 +16,41 @@
     </a>
 
     <nav class="nav-links">
-      {%- for link in section.settings.menu.links -%}
-        <a
-          href="{{ link.url }}"
-          class="nav-link{% if link.active %} active{% endif %}"
-          {% if link.url contains '#' %}data-anchor="{{ link.url | split: '#' | last }}"{% endif %}
-        >
-          {{ link.title }}
-        </a>
-      {%- endfor -%}
+      {%- comment -%}
+        Priorité 1 : liens saisis dans le Customizer (section settings)
+        Priorité 2 : menu Shopify sélectionné (link_list)
+      {%- endcomment -%}
+      {%- assign has_custom_links = false -%}
+      {%- if section.settings.link_1_label != blank or section.settings.link_2_label != blank or section.settings.link_3_label != blank or section.settings.link_4_label != blank or section.settings.link_5_label != blank -%}
+        {%- assign has_custom_links = true -%}
+      {%- endif -%}
+
+      {%- if has_custom_links -%}
+        {%- for i in (1..5) -%}
+          {%- assign label_key = 'link_' | append: i | append: '_label' -%}
+          {%- assign url_key   = 'link_' | append: i | append: '_url' -%}
+          {%- assign label     = section.settings[label_key] -%}
+          {%- assign url       = section.settings[url_key] -%}
+          {%- if label != blank -%}
+            {%- assign url_value = url | default: '#' -%}
+            <a href="{{ url_value }}"
+               class="nav-link"
+               {% if url_value contains '#' %}data-anchor="{{ url_value | split: '#' | last }}"{% endif %}>
+              {{ label }}
+            </a>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- else -%}
+        {%- for link in section.settings.menu.links -%}
+          <a
+            href="{{ link.url }}"
+            class="nav-link{% if link.active %} active{% endif %}"
+            {% if link.url contains '#' %}data-anchor="{{ link.url | split: '#' | last }}"{% endif %}
+          >
+            {{ link.title }}
+          </a>
+        {%- endfor -%}
+      {%- endif -%}
     </nav>
 
     <div class="nav-right">
@@ -73,13 +99,29 @@
   </div>
 
   <div class="nav-mobile-panel" data-mobile-panel hidden>
-    {%- for link in section.settings.menu.links -%}
-      <a
-        href="{{ link.url }}"
-        class="nav-mobile-link{% if link.active %} active{% endif %}"
-        {% if link.url contains '#' %}data-anchor="{{ link.url | split: '#' | last }}"{% endif %}
-      >{{ link.title }}</a>
-    {%- endfor -%}
+    {%- if has_custom_links -%}
+      {%- for i in (1..5) -%}
+        {%- assign label_key = 'link_' | append: i | append: '_label' -%}
+        {%- assign url_key   = 'link_' | append: i | append: '_url' -%}
+        {%- assign label     = section.settings[label_key] -%}
+        {%- assign url       = section.settings[url_key] -%}
+        {%- if label != blank -%}
+          {%- assign url_value = url | default: '#' -%}
+          <a href="{{ url_value }}"
+             class="nav-mobile-link"
+             {% if url_value contains '#' %}data-anchor="{{ url_value | split: '#' | last }}"{% endif %}>
+            {{ label }}
+          </a>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- else -%}
+      {%- for link in section.settings.menu.links -%}
+        <a href="{{ link.url }}"
+           class="nav-mobile-link{% if link.active %} active{% endif %}"
+           {% if link.url contains '#' %}data-anchor="{{ link.url | split: '#' | last }}"{% endif %}
+        >{{ link.title }}</a>
+      {%- endfor -%}
+    {%- endif -%}
   </div>
 </header>
 
@@ -239,9 +281,19 @@
   // Multi-currency switcher (FCFA / EUR / USD / CAD)
   (function() {
     var segment = document.querySelector('[data-currency-switcher]');
-    if (!segment) return;
-    var rates = JSON.parse(segment.getAttribute('data-rates') || '{}');
-    var defaultCur = segment.getAttribute('data-default') || 'FCFA';
+    // Les taux sont lus depuis le segment si présent, sinon on se replie
+    // sur les valeurs par défaut — ainsi la conversion marche même si le
+    // switcher est masqué (mobile < 700px, toutes cases décochées, etc.).
+    var rates = {
+      FCFA: 1,
+      EUR: {{ settings.currency_rate_eur | default: 656 }},
+      USD: {{ settings.currency_rate_usd | default: 610 }},
+      CAD: {{ settings.currency_rate_cad | default: 445 }}
+    };
+    if (segment) {
+      try { rates = JSON.parse(segment.getAttribute('data-rates')) || rates; } catch(e) {}
+    }
+    var defaultCur = (segment && segment.getAttribute('data-default')) || '{{ settings.currency_default | default: "FCFA" }}';
     var stored = null;
     try { stored = localStorage.getItem('kairos_currency'); } catch(e) {}
     var active = (stored && rates[stored]) ? stored : defaultCur;
@@ -265,12 +317,15 @@
     }
 
     function applyCurrency(cur) {
+      if (!rates[cur]) cur = defaultCur;
       active = cur;
       try { localStorage.setItem('kairos_currency', cur); } catch(e) {}
-      segment.querySelectorAll('.cur-btn').forEach(function(b) {
-        if (b.getAttribute('data-currency') === cur) b.classList.add('on');
-        else b.classList.remove('on');
-      });
+      if (segment) {
+        segment.querySelectorAll('.cur-btn').forEach(function(b) {
+          if (b.getAttribute('data-currency') === cur) b.classList.add('on');
+          else b.classList.remove('on');
+        });
+      }
       document.querySelectorAll('[data-price-fcfa]').forEach(function(el) {
         var base = parseInt(el.getAttribute('data-price-fcfa'), 10);
         if (!isNaN(base)) el.textContent = fmt(base, cur);
@@ -281,12 +336,22 @@
       });
     }
 
-    segment.querySelectorAll('.cur-btn').forEach(function(b) {
-      b.addEventListener('click', function() {
-        applyCurrency(b.getAttribute('data-currency'));
+    // Expose global pour que les sections (catalogue éditable, modal produit)
+    // puissent déclencher une conversion après rendu dynamique.
+    window.kairosApplyCurrency = applyCurrency;
+    window.kairosGetCurrency  = function() { return active; };
+
+    if (segment) {
+      segment.querySelectorAll('.cur-btn').forEach(function(b) {
+        b.addEventListener('click', function() {
+          applyCurrency(b.getAttribute('data-currency'));
+        });
       });
-    });
+    }
     applyCurrency(active);
+
+    // Re-trigger automatique quand Shopify Customizer recharge une section
+    document.addEventListener('shopify:section:load', applyCurrency.bind(null, active));
   })();
 </script>
 
@@ -296,7 +361,27 @@
   "settings": [
     { "type": "text", "id": "brand_line_1", "label": "Ligne 1 (nom marque)", "default": "My body goal" },
     { "type": "text", "id": "brand_line_2", "label": "Ligne 2 (signature)", "default": "By Kairos.Distribution" },
-    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" }
+
+    { "type": "header", "content": "Menu (5 liens max)" },
+    { "type": "paragraph", "content": "Remplis les paires ci-dessous. Laisse vides pour utiliser le menu Shopify ci-dessous à la place. Les liens avec # (ex. /#produits) déclenchent le scroll-spy automatiquement." },
+
+    { "type": "text", "id": "link_1_label", "label": "Lien 1 — libellé", "default": "Accueil" },
+    { "type": "url",  "id": "link_1_url",   "label": "Lien 1 — URL",     "default": "/" },
+
+    { "type": "text", "id": "link_2_label", "label": "Lien 2 — libellé", "default": "Produits" },
+    { "type": "url",  "id": "link_2_url",   "label": "Lien 2 — URL",     "default": "/#produits" },
+
+    { "type": "text", "id": "link_3_label", "label": "Lien 3 — libellé", "default": "Avis clients" },
+    { "type": "url",  "id": "link_3_url",   "label": "Lien 3 — URL",     "default": "/#avis" },
+
+    { "type": "text", "id": "link_4_label", "label": "Lien 4 — libellé", "default": "Retours clients" },
+    { "type": "url",  "id": "link_4_url",   "label": "Lien 4 — URL",     "default": "/#retours" },
+
+    { "type": "text", "id": "link_5_label", "label": "Lien 5 — libellé", "default": "" },
+    { "type": "url",  "id": "link_5_url",   "label": "Lien 5 — URL",     "default": "" },
+
+    { "type": "header", "content": "Menu Shopify (fallback)" },
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu", "info": "Utilisé si aucun libellé n'est rempli ci-dessus." }
   ],
   "presets": [{ "name": "Header" }]
 }
