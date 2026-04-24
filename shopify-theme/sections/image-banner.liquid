@@ -1,124 +1,117 @@
-{%- assign nav_h_desktop = 70 -%}
-{%- assign nav_h_mobile  = 58 -%}
 {%- assign pad_x_desktop = 48 -%}
 {%- assign pad_x_mobile  = 16 -%}
+{%- assign nav_h_desktop = 70 -%}
+{%- assign nav_h_mobile  = 58 -%}
 
-<section class="hero-cover" id="top">
-  {%- if section.settings.image -%}
+{%- assign s = section.settings -%}
+{%- assign top_op    = s.overlay_top_opacity    | default: 70 | divided_by: 100.0 -%}
+{%- assign bot_op    = s.overlay_bottom_opacity | default: 70 | divided_by: 100.0 -%}
+{%- assign top_color = s.overlay_top_color      | default: '#140a0a' -%}
+{%- assign bot_color = s.overlay_bottom_color   | default: '#140a0a' -%}
+
+<section class="hero-cover hero-cover-{{ section.id }}" id="top">
+  {%- if s.image -%}
     <img
       class="hero-cover-image"
-      src="{{ section.settings.image | image_url: width: 1920 }}"
+      src="{{ s.image | image_url: width: 1920 }}"
       srcset="
-        {{ section.settings.image | image_url: width: 480 }} 480w,
-        {{ section.settings.image | image_url: width: 800 }} 800w,
-        {{ section.settings.image | image_url: width: 1200 }} 1200w,
-        {{ section.settings.image | image_url: width: 1920 }} 1920w
+        {{ s.image | image_url: width: 480 }} 480w,
+        {{ s.image | image_url: width: 800 }} 800w,
+        {{ s.image | image_url: width: 1200 }} 1200w,
+        {{ s.image | image_url: width: 1920 }} 1920w
       "
       sizes="100vw"
-      alt="{{ section.settings.image.alt | default: section.settings.line_1 }}"
-      width="{{ section.settings.image.width }}"
-      height="{{ section.settings.image.height }}"
+      alt="{{ s.image.alt | default: s.line_1 }}"
+      width="{{ s.image.width }}"
+      height="{{ s.image.height }}"
       loading="eager"
     >
   {%- else -%}
-    {%- comment -%}
-      Fallback : image baked-in dans assets/cover.jpg — permet d'afficher une
-      couverture par défaut même sur une boutique Shopify neuve, tant que
-      l'opérateur n'a pas uploadé sa propre photo.
-    {%- endcomment -%}
-    <img class="hero-cover-image" src="{{ 'cover.jpg' | asset_url }}" alt="{{ section.settings.line_1 | default: 'Kairos' }}" loading="eager">
+    <img class="hero-cover-image" src="{{ 'cover.jpg' | asset_url }}" alt="{{ s.line_1 | default: 'Kairos' }}" loading="eager">
   {%- endif -%}
 
-  <div class="hero-gradient hero-gradient-top"></div>
-  <div class="hero-gradient hero-gradient-bottom"></div>
+  {%- if s.overlay_top_enabled -%}
+    <div class="hero-gradient hero-gradient-top"></div>
+  {%- endif -%}
+  {%- if s.overlay_bottom_enabled -%}
+    <div class="hero-gradient hero-gradient-bottom"></div>
+  {%- endif -%}
 
   <div class="hero-text">
-    {%- if section.settings.line_1 != blank -%}
+    {%- if s.line_1 != blank -%}
       <span class="hero-line-1"
-            style="font-size: {{ section.settings.line_1_size | default: 32 }}px;
-                   color: {{ section.settings.line_1_color | default: '#ffffff' }};
-                   font-weight: {{ section.settings.line_1_weight | default: 400 }};">
-        {{ section.settings.line_1 }}
+            style="font-size: {{ s.line_1_size | default: 32 }}px;
+                   color: {{ s.line_1_color | default: '#ffffff' }};
+                   font-weight: {{ s.line_1_weight | default: 400 }};">
+        {{ s.line_1 }}
       </span>
     {%- endif -%}
-    {%- if section.settings.line_2 != blank -%}
+    {%- if s.line_2 != blank -%}
       <span class="hero-line-2"
-            style="font-size: {{ section.settings.line_2_size | default: 12 }}px;
-                   color: {{ section.settings.line_2_color | default: '#ffffff' }};
-                   font-weight: {{ section.settings.line_2_weight | default: 700 }};">
-        {{ section.settings.line_2 }}
+            style="font-size: {{ s.line_2_size | default: 12 }}px;
+                   color: {{ s.line_2_color | default: '#ffffff' }};
+                   font-weight: {{ s.line_2_weight | default: 700 }};">
+        {{ s.line_2 }}
       </span>
     {%- endif -%}
-    {%- if section.settings.line_3 != blank -%}
+    {%- if s.line_3 != blank -%}
       <span class="hero-line-3"
-            style="font-size: {{ section.settings.line_3_size | default: 11 }}px;
-                   color: {{ section.settings.line_3_color | default: 'rgba(255,255,255,0.9)' }};
-                   font-weight: {{ section.settings.line_3_weight | default: 600 }};">
-        {{ section.settings.line_3 }}
+            style="font-size: {{ s.line_3_size | default: 11 }}px;
+                   color: {{ s.line_3_color | default: 'rgba(255,255,255,0.9)' }};
+                   font-weight: {{ s.line_3_weight | default: 600 }};">
+        {{ s.line_3 }}
       </span>
     {%- endif -%}
   </div>
 
-  {%- if section.settings.button_1_label != blank or section.settings.button_2_label != blank -%}
+  {%- if s.button_1_label != blank or s.button_2_label != blank -%}
     <div class="hero-buttons">
-      {%- if section.settings.button_1_label != blank -%}
-        <a href="{{ section.settings.button_1_link }}" class="hero-btn-primary">
-          {{ section.settings.button_1_label }}
-        </a>
+      {%- if s.button_1_label != blank -%}
+        <a href="{{ s.button_1_link }}" class="hero-btn-primary">{{ s.button_1_label }}</a>
       {%- endif -%}
-      {%- if section.settings.button_2_label != blank -%}
-        <a href="{{ section.settings.button_2_link }}" class="hero-btn-secondary">
-          {{ section.settings.button_2_label }}
-        </a>
+      {%- if s.button_2_label != blank -%}
+        <a href="{{ s.button_2_link }}" class="hero-btn-secondary">{{ s.button_2_label }}</a>
       {%- endif -%}
     </div>
   {%- endif -%}
 </section>
 
 <style>
-  /* ========= HERO — version pleine image ========= */
-  .hero-cover {
+  .hero-cover-{{ section.id }} {
     position: relative;
     width: 100%;
     background: var(--ink);
     overflow: hidden;
     line-height: 0;
   }
-  .hero-cover-image {
+  .hero-cover-{{ section.id }} .hero-cover-image {
     display: block;
     width: 100%;
-    height: auto;           /* plein image, jamais rognée */
+    height: auto;
+    max-width: 100%;
     line-height: 0;
   }
-  .hero-cover-placeholder {
-    width: 100%;
-    aspect-ratio: 868 / 1280;
-    background: linear-gradient(150deg,#521529 0%,#6d1e3a 45%,#8a2d4d 75%,#e8c4bc 100%);
-  }
-
-  /* Dégradés lisibilité nav + CTAs */
-  .hero-gradient {
+  .hero-cover-{{ section.id }} .hero-gradient {
     position: absolute;
     left: 0; right: 0;
     pointer-events: none;
     z-index: 2;
   }
-  .hero-gradient-top {
-    top: 0; height: 38%;
-    background: linear-gradient(to bottom, rgba(20,10,10,.7) 0%, transparent 100%);
-  }
-  .hero-gradient-bottom {
-    bottom: 0; height: 32%;
-    background: linear-gradient(to top, rgba(20,10,10,.7) 0%, transparent 100%);
-  }
-
-  /* Pile de 3 lignes — alignée avec le logo de la nav
-     (même padding gauche que .nav-inner, centré verticalement avec la nav) */
-  .hero-text {
-    position: absolute;
+  .hero-cover-{{ section.id }} .hero-gradient-top {
     top: 0;
-    left: 0;
-    right: 0;
+    height: {{ s.overlay_top_height | default: 38 }}%;
+    background: linear-gradient(to bottom, {{ top_color }} 0%, transparent 100%);
+    opacity: {{ top_op }};
+  }
+  .hero-cover-{{ section.id }} .hero-gradient-bottom {
+    bottom: 0;
+    height: {{ s.overlay_bottom_height | default: 32 }}%;
+    background: linear-gradient(to top, {{ bot_color }} 0%, transparent 100%);
+    opacity: {{ bot_op }};
+  }
+  .hero-cover-{{ section.id }} .hero-text {
+    position: absolute;
+    top: 0; left: 0; right: 0;
     z-index: 4;
     display: flex;
     flex-direction: column;
@@ -126,30 +119,25 @@
     gap: 10px;
     line-height: 1.05;
     padding: 14px {{ pad_x_desktop }}px;
-    /* La première ligne tombe dans la barre nav (hauteur 70px), les deux suivantes dépassent sous la nav */
     min-height: {{ nav_h_desktop }}px;
   }
-  .hero-line-1 {
+  .hero-cover-{{ section.id }} .hero-line-1 {
     font-family: var(--f-display);
     letter-spacing: -.01em;
     text-shadow: 0 2px 16px rgba(0,0,0,.8);
     white-space: nowrap;
     line-height: 1.05;
   }
-  .hero-line-2,
-  .hero-line-3 {
+  .hero-cover-{{ section.id }} .hero-line-2,
+  .hero-cover-{{ section.id }} .hero-line-3 {
     letter-spacing: .12em;
     text-transform: uppercase;
     text-shadow: 0 1px 10px rgba(0,0,0,.8);
     white-space: nowrap;
   }
-
-  /* CTAs en bas à gauche */
-  .hero-buttons {
+  .hero-cover-{{ section.id }} .hero-buttons {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: 0; left: 0; right: 0;
     z-index: 3;
     display: flex;
     gap: 12px;
@@ -157,23 +145,21 @@
     align-items: flex-end;
     padding: 0 {{ pad_x_desktop }}px 40px;
   }
-
   @media (max-width: 720px) {
-    .hero-text {
+    .hero-cover-{{ section.id }} .hero-text {
       padding: 10px {{ pad_x_mobile }}px;
       min-height: {{ nav_h_mobile }}px;
       gap: 8px;
     }
-    .hero-line-1 {
-      font-size: clamp(22px, 6vw, 28px) !important;
-    }
-    .hero-line-2 { font-size: 10px !important; }
-    .hero-line-3 { font-size: 10px !important; }
-    .hero-buttons {
+    .hero-cover-{{ section.id }} .hero-line-1 { font-size: clamp(22px, 6vw, 28px) !important; }
+    .hero-cover-{{ section.id }} .hero-line-2,
+    .hero-cover-{{ section.id }} .hero-line-3 { font-size: 10px !important; }
+    .hero-cover-{{ section.id }} .hero-buttons {
       padding: 0 {{ pad_x_mobile }}px 24px;
       gap: 10px;
     }
-    .hero-btn-primary, .hero-btn-secondary {
+    .hero-cover-{{ section.id }} .hero-btn-primary,
+    .hero-cover-{{ section.id }} .hero-btn-secondary {
       padding: 11px 20px !important;
       font-size: 13px !important;
     }
@@ -186,10 +172,22 @@
   "settings": [
     { "type": "image_picker", "id": "image", "label": "Image de couverture" },
 
+    { "type": "header", "content": "Ombrage (dégradé haut)" },
+    { "type": "checkbox", "id": "overlay_top_enabled", "label": "Activer", "default": true },
+    { "type": "color",   "id": "overlay_top_color",   "label": "Couleur", "default": "#140a0a" },
+    { "type": "range",   "id": "overlay_top_opacity", "label": "Opacité (%)", "min": 0, "max": 100, "step": 5, "default": 70 },
+    { "type": "range",   "id": "overlay_top_height",  "label": "Hauteur (%)",  "min": 0, "max": 100, "step": 2, "default": 38 },
+
+    { "type": "header", "content": "Ombrage (dégradé bas)" },
+    { "type": "checkbox", "id": "overlay_bottom_enabled", "label": "Activer", "default": true },
+    { "type": "color",   "id": "overlay_bottom_color",   "label": "Couleur", "default": "#140a0a" },
+    { "type": "range",   "id": "overlay_bottom_opacity", "label": "Opacité (%)", "min": 0, "max": 100, "step": 5, "default": 70 },
+    { "type": "range",   "id": "overlay_bottom_height",  "label": "Hauteur (%)",  "min": 0, "max": 100, "step": 2, "default": 32 },
+
     { "type": "header", "content": "Ligne 1 (titre principal)" },
-    { "type": "text", "id": "line_1", "label": "Texte", "default": "Mybodygoal" },
-    { "type": "range", "id": "line_1_size", "label": "Taille (px)", "min": 18, "max": 64, "step": 2, "default": 32 },
-    { "type": "color", "id": "line_1_color", "label": "Couleur", "default": "#ffffff" },
+    { "type": "text",   "id": "line_1",        "label": "Texte", "default": "Mybodygoal" },
+    { "type": "range",  "id": "line_1_size",   "label": "Taille (px)", "min": 18, "max": 64, "step": 2, "default": 32 },
+    { "type": "color",  "id": "line_1_color",  "label": "Couleur", "default": "#ffffff" },
     { "type": "select", "id": "line_1_weight", "label": "Graisse",
       "options": [
         { "value": "300", "label": "Light 300" },
@@ -200,9 +198,9 @@
       ], "default": "400" },
 
     { "type": "header", "content": "Ligne 2 (signature)" },
-    { "type": "text", "id": "line_2", "label": "Texte", "default": "By Kairos.Distribution" },
-    { "type": "range", "id": "line_2_size", "label": "Taille (px)", "min": 9, "max": 20, "step": 1, "default": 12 },
-    { "type": "color", "id": "line_2_color", "label": "Couleur", "default": "#ffffff" },
+    { "type": "text",   "id": "line_2",        "label": "Texte", "default": "By Kairos.Distribution" },
+    { "type": "range",  "id": "line_2_size",   "label": "Taille (px)", "min": 9, "max": 20, "step": 1, "default": 12 },
+    { "type": "color",  "id": "line_2_color",  "label": "Couleur", "default": "#ffffff" },
     { "type": "select", "id": "line_2_weight", "label": "Graisse",
       "options": [
         { "value": "400", "label": "Regular 400" },
@@ -212,9 +210,9 @@
       ], "default": "700" },
 
     { "type": "header", "content": "Ligne 3 (eyebrow)" },
-    { "type": "text", "id": "line_3", "label": "Texte", "default": "Beauté · Silhouette · Confiance" },
-    { "type": "range", "id": "line_3_size", "label": "Taille (px)", "min": 9, "max": 18, "step": 1, "default": 11 },
-    { "type": "color", "id": "line_3_color", "label": "Couleur", "default": "#ffffff" },
+    { "type": "text",   "id": "line_3",        "label": "Texte", "default": "Beauté · Silhouette · Confiance" },
+    { "type": "range",  "id": "line_3_size",   "label": "Taille (px)", "min": 9, "max": 18, "step": 1, "default": 11 },
+    { "type": "color",  "id": "line_3_color",  "label": "Couleur", "default": "#ffffff" },
     { "type": "select", "id": "line_3_weight", "label": "Graisse",
       "options": [
         { "value": "400", "label": "Regular 400" },
