@@ -1,0 +1,23 @@
+<section class="container" style="padding:90px 0 60px;max-width:820px;">
+  <div class="breadcrumbs"><a href="{{ routes.account_url }}">Mon compte</a><span>/</span><span>{{ order.name }}</span></div>
+  <h1 class="display" style="font-size:clamp(28px,4vw,36px);margin:8px 0 4px;">{{ order.name }}</h1>
+  <p style="color:var(--muted);font-size:14px;">Passée le {{ order.created_at | date: '%d %B %Y à %H:%M' }}</p>
+
+  <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:24px;">
+    <thead><tr style="border-bottom:1px solid var(--line);"><th style="text-align:left;padding:8px 0;">Article</th><th>Qté</th><th style="text-align:right;">Total</th></tr></thead>
+    <tbody>
+    {%- for line in order.line_items -%}
+      <tr style="border-bottom:1px solid var(--line);">
+        <td style="padding:10px 0;">{{ line.title }}</td>
+        <td>{{ line.quantity }}</td>
+        <td style="text-align:right;">{{ line.final_line_price | money }}</td>
+      </tr>
+    {%- endfor -%}
+    </tbody>
+    <tfoot>
+      <tr><td colspan="2" style="padding:12px 0;text-align:right;color:var(--muted);">Sous-total</td><td style="text-align:right;">{{ order.subtotal_price | money }}</td></tr>
+      <tr><td colspan="2" style="padding:4px 0;text-align:right;color:var(--muted);">Livraison</td><td style="text-align:right;">{{ order.shipping_price | money }}</td></tr>
+      <tr style="font-weight:600;"><td colspan="2" style="padding:12px 0;text-align:right;">Total</td><td style="text-align:right;">{{ order.total_price | money }}</td></tr>
+    </tfoot>
+  </table>
+</section>
