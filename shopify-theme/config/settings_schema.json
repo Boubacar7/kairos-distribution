@@ -67,5 +67,19 @@
     "settings": [
       { "type": "image_picker", "id": "favicon", "label": "Favicon", "info": "32×32 px" }
     ]
+  },
+  {
+    "name": "Devises",
+    "settings": [
+      { "type": "paragraph", "content": "Le switcher de devise convertit les prix saisis en FCFA dans les blocks « Produit » du catalogue éditable. Les taux sont appliqués côté visiteur, sans affecter Shopify Payments." },
+      { "type": "text",  "id": "currency_default",    "label": "Devise par défaut", "default": "FCFA", "info": "FCFA, EUR, USD ou CAD" },
+      { "type": "range", "id": "currency_rate_eur",   "label": "1 EUR = N FCFA", "min": 400, "max": 900, "step": 1,  "default": 656 },
+      { "type": "range", "id": "currency_rate_usd",   "label": "1 USD = N FCFA", "min": 400, "max": 900, "step": 1,  "default": 610 },
+      { "type": "range", "id": "currency_rate_cad",   "label": "1 CAD = N FCFA", "min": 300, "max": 700, "step": 1,  "default": 445 },
+      { "type": "checkbox", "id": "currency_show_fcfa", "label": "Afficher FCFA", "default": true },
+      { "type": "checkbox", "id": "currency_show_eur",  "label": "Afficher EUR",  "default": true },
+      { "type": "checkbox", "id": "currency_show_usd",  "label": "Afficher USD",  "default": true },
+      { "type": "checkbox", "id": "currency_show_cad",  "label": "Afficher CAD",  "default": true }
+    ]
   }
 ]

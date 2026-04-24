@@ -45,7 +45,8 @@
       </div>
 
       {%- if product.description != blank -%}
-        <div class="desc">{{ product.description }}</div>
+        <div class="kicker" style="margin-top:24px;">{{ 'products.product.description' | t | default: 'Description' }}</div>
+        <div class="desc" style="margin-top:8px;">{{ product.description }}</div>
       {%- endif -%}
 
       <form method="post" action="{{ routes.cart_add_url }}" id="product-form" style="margin-top:28px;">

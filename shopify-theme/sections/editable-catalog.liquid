@@ -17,9 +17,7 @@
       <div class="product-grid">
         {%- for block in section.blocks -%}
           {%- assign b = block.settings -%}
-          {%- assign has_link = false -%}
-          {%- if b.link != blank -%}{%- assign has_link = true -%}{%- endif -%}
-          <{% if has_link %}a href="{{ b.link }}"{% else %}div{% endif %} class="product-card" {{ block.shopify_attributes }}>
+          <button type="button" class="product-card product-card-button" data-product-id="{{ block.id }}" {{ block.shopify_attributes }}>
             <div class="media">
               {%- if b.image -%}
                 <img
@@ -36,7 +34,7 @@
             </div>
             <div class="chips">
               {%- if b.category != blank -%}<span class="chip">{{ b.category }}</span>{%- else -%}<span></span>{%- endif -%}
-              {%- if b.compare_label != blank -%}<span class="chip chip-promo" style="font-size:10px;padding:4px 8px;">PROMO</span>{%- endif -%}
+              {%- if b.compare_fcfa != blank or b.compare_label != blank -%}<span class="chip chip-promo" style="font-size:10px;padding:4px 8px;">PROMO</span>{%- endif -%}
             </div>
             <div class="title">{{ b.title }}</div>
             {%- if b.description != blank -%}
@@ -46,8 +44,14 @@
             {%- endif -%}
             <div class="price-row">
               <div>
-                <span class="price">{{ b.price_label }}</span>
-                {%- if b.compare_label != blank -%}
+                {%- if b.price_fcfa and b.price_fcfa > 0 -%}
+                  <span class="price" data-price-fcfa="{{ b.price_fcfa }}">{{ b.price_fcfa }}</span>
+                {%- else -%}
+                  <span class="price">{{ b.price_label }}</span>
+                {%- endif -%}
+                {%- if b.compare_fcfa and b.compare_fcfa > 0 -%}
+                  <span class="old-price" data-compare-fcfa="{{ b.compare_fcfa }}">{{ b.compare_fcfa }}</span>
+                {%- elsif b.compare_label != blank -%}
                   <span class="old-price">{{ b.compare_label }}</span>
                 {%- endif -%}
               </div>
@@ -57,7 +61,45 @@
                 </svg>
               </span>
             </div>
-          </{% if has_link %}a{% else %}div{% endif %}>
+
+            {%- comment -%}
+              Données utilisées par le modal (script plus bas) : on les stocke
+              dans un <template> caché pour lecture JS — rend le thème propre.
+            {%- endcomment -%}
+            <template data-detail-template>
+              <div class="detail-body">
+                {%- if b.image -%}
+                  <img src="{{ b.image | image_url: width: 900 }}" alt="{{ b.title }}">
+                {%- endif -%}
+                <div class="detail-content">
+                  {%- if b.category != blank -%}<span class="chip">{{ b.category }}</span>{%- endif -%}
+                  <h2 class="display">{{ b.title }}</h2>
+                  <div class="detail-price">
+                    {%- if b.price_fcfa and b.price_fcfa > 0 -%}
+                      <span class="price-big" data-price-fcfa="{{ b.price_fcfa }}">{{ b.price_fcfa }}</span>
+                    {%- else -%}
+                      <span class="price-big">{{ b.price_label }}</span>
+                    {%- endif -%}
+                    {%- if b.compare_fcfa and b.compare_fcfa > 0 -%}
+                      <span class="price-old" data-compare-fcfa="{{ b.compare_fcfa }}">{{ b.compare_fcfa }}</span>
+                    {%- elsif b.compare_label != blank -%}
+                      <span class="price-old">{{ b.compare_label }}</span>
+                    {%- endif -%}
+                  </div>
+                  {%- if b.details != blank -%}
+                    <div class="detail-long">{{ b.details }}</div>
+                  {%- elsif b.description != blank -%}
+                    <p class="detail-long">{{ b.description }}</p>
+                  {%- endif -%}
+                  {%- if b.link != blank -%}
+                    <a href="{{ b.link }}" class="btn btn-p detail-cta">
+                      {{ section.settings.view_detail_label | default: 'Voir la fiche complète' }} →
+                    </a>
+                  {%- endif -%}
+                </div>
+              </div>
+            </template>
+          </button>
         {%- endfor -%}
       </div>
     {%- else -%}
@@ -66,13 +108,148 @@
   </div>
 </section>
 
+{%- comment -%}Modal pour la fiche détail d'un bloc produit{%- endcomment -%}
+<div class="pdtl-modal" data-product-modal hidden>
+  <div class="pdtl-backdrop" data-modal-close></div>
+  <div class="pdtl-dialog" role="dialog" aria-modal="true" aria-labelledby="pdtl-title">
+    <button type="button" class="pdtl-close" data-modal-close aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="pdtl-content" data-modal-content></div>
+  </div>
+</div>
+
 <style>
   .ph-fallback {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     background: linear-gradient(135deg,#f5d9d3 0%,#e8b8c8 50%,#d6a3b8 100%);
   }
+  .product-card-button {
+    all: unset; display: block; width: 100%;
+    background: #fff;
+    border-radius: var(--r-lg);
+    padding: 14px;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+    box-sizing: border-box;
+  }
+  .product-card-button:hover { transform: translateY(-4px); box-shadow: var(--sh-md); }
+  .product-card-button:focus-visible { outline: 2px solid var(--bordeaux); outline-offset: 2px; }
+
+  .pdtl-modal[hidden] { display: none; }
+  .pdtl-modal {
+    position: fixed; inset: 0;
+    z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .pdtl-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(26,20,20,.5);
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+  }
+  .pdtl-dialog {
+    position: relative;
+    background: #fff;
+    border-radius: var(--r-lg);
+    max-width: 900px; width: 100%;
+    max-height: 90vh; overflow: auto;
+    box-shadow: var(--sh-lg);
+  }
+  .pdtl-close {
+    position: absolute; top: 16px; right: 16px;
+    z-index: 10;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.9);
+    color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .pdtl-content .detail-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .pdtl-content .detail-body > img {
+    width: 100%; height: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    display: block;
+    border-top-left-radius: var(--r-lg);
+    border-bottom-left-radius: var(--r-lg);
+  }
+  .pdtl-content .detail-content {
+    padding: 40px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .pdtl-content .display { font-size: clamp(24px, 3vw, 36px); letter-spacing: -.02em; margin: 0; }
+  .pdtl-content .detail-price {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .pdtl-content .price-big { font-size: 24px; font-weight: 700; color: var(--bordeaux); }
+  .pdtl-content .price-old { font-size: 13px; color: var(--muted); text-decoration: line-through; }
+  .pdtl-content .detail-long { font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+  .pdtl-content .detail-long p { margin: 0 0 12px; }
+  .pdtl-content .detail-cta { margin-top: 12px; width: fit-content; }
+  @media (max-width: 700px) {
+    .pdtl-content .detail-body { grid-template-columns: 1fr; }
+    .pdtl-content .detail-body > img {
+      aspect-ratio: 4/3;
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+    }
+    .pdtl-content .detail-content { padding: 24px; }
+  }
 </style>
+
+<script>
+  (function() {
+    var modal = document.querySelector('[data-product-modal]');
+    if (!modal) return;
+    var content = modal.querySelector('[data-modal-content]');
+    function open(cardButton) {
+      var tmpl = cardButton.querySelector('[data-detail-template]');
+      if (!tmpl) return;
+      content.innerHTML = tmpl.innerHTML;
+      modal.removeAttribute('hidden');
+      document.documentElement.style.overflow = 'hidden';
+      // Propage la devise courante aux prix du modal
+      window.dispatchEvent(new CustomEvent('kairos:currency-refresh'));
+      var saved = null;
+      try { saved = localStorage.getItem('kairos_currency'); } catch(e) {}
+      if (saved) {
+        var rates = {"FCFA":1,"EUR":{{ settings.currency_rate_eur | default: 656 }},"USD":{{ settings.currency_rate_usd | default: 610 }},"CAD":{{ settings.currency_rate_cad | default: 445 }}};
+        var fmt = function(fcfa, cur) {
+          var v = fcfa / (rates[cur] || 1);
+          if (cur === 'FCFA') return Math.round(v).toLocaleString('fr-FR').replace(/,/g,' ') + ' FCFA';
+          if (cur === 'EUR')  return v.toFixed(2).replace('.', ',') + ' €';
+          if (cur === 'USD')  return '$' + v.toFixed(2);
+          if (cur === 'CAD')  return 'CA$' + v.toFixed(2);
+          return v.toFixed(2) + ' ' + cur;
+        };
+        content.querySelectorAll('[data-price-fcfa], [data-compare-fcfa]').forEach(function(el) {
+          var base = parseInt(el.getAttribute('data-price-fcfa') || el.getAttribute('data-compare-fcfa'), 10);
+          if (!isNaN(base)) el.textContent = fmt(base, saved);
+        });
+      }
+    }
+    function close() {
+      modal.setAttribute('hidden', '');
+      content.innerHTML = '';
+      document.documentElement.style.overflow = '';
+    }
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.product-card-button');
+      if (btn && !e.target.closest('a')) { open(btn); return; }
+      if (e.target.closest('[data-modal-close]')) { close(); }
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !modal.hasAttribute('hidden')) close();
+    });
+  })();
+</script>
 
 {% schema %}
 {
@@ -82,7 +259,8 @@
     { "type": "text", "id": "kicker",  "label": "Kicker", "default": "Catalogue" },
     { "type": "text", "id": "heading", "label": "Titre", "default": "Nos rituels du moment" },
     { "type": "text", "id": "view_all_label", "label": "Libellé « Tout voir »", "default": "Tout voir" },
-    { "type": "url",  "id": "view_all_link",  "label": "Lien « Tout voir »" }
+    { "type": "url",  "id": "view_all_link",  "label": "Lien « Tout voir »" },
+    { "type": "text", "id": "view_detail_label", "label": "Libellé bouton « Voir la fiche »", "default": "Voir la fiche complète" }
   ],
   "blocks": [
     {
@@ -90,12 +268,22 @@
       "name": "Produit",
       "settings": [
         { "type": "image_picker", "id": "image", "label": "Image" },
-        { "type": "text",   "id": "title",         "label": "Nom du produit", "default": "Nom du produit" },
-        { "type": "text",   "id": "category",      "label": "Catégorie (chip)", "default": "Beauté" },
-        { "type": "textarea","id": "description",  "label": "Accroche / tagline" },
-        { "type": "text",   "id": "price_label",   "label": "Prix", "default": "24 900 FCFA", "info": "Format libre — sera affiché tel quel" },
-        { "type": "text",   "id": "compare_label", "label": "Ancien prix (barré)", "info": "Laisse vide si pas de promo" },
-        { "type": "url",    "id": "link",          "label": "Lien produit", "info": "URL vers /products/xxx. Laisse vide si démo." }
+        { "type": "text",     "id": "title",        "label": "Nom du produit", "default": "Nom du produit" },
+        { "type": "text",     "id": "category",     "label": "Catégorie (chip)", "default": "Beauté" },
+        { "type": "textarea", "id": "description",  "label": "Accroche (tagline)", "info": "Texte court affiché sous le nom" },
+        { "type": "richtext", "id": "details",      "label": "Description complète", "info": "Affichée dans le popup produit (clic)" },
+
+        { "type": "header", "content": "Prix — saisie en FCFA (conversion auto)" },
+        { "type": "number", "id": "price_fcfa",   "label": "Prix actuel (FCFA)",
+          "info": "Laisse vide pour utiliser le libellé manuel ci-dessous" },
+        { "type": "number", "id": "compare_fcfa", "label": "Ancien prix (FCFA, barré)", "info": "Active automatiquement le badge PROMO" },
+
+        { "type": "header", "content": "Prix — libellés manuels (fallback)" },
+        { "type": "text",   "id": "price_label",   "label": "Prix", "default": "24 900 FCFA", "info": "Utilisé si prix FCFA vide" },
+        { "type": "text",   "id": "compare_label", "label": "Ancien prix", "info": "Utilisé si ancien prix FCFA vide" },
+
+        { "type": "header", "content": "Lien" },
+        { "type": "url",    "id": "link",          "label": "Lien vers fiche complète", "info": "Ex. /products/glow-skin — affiché dans le popup" }
       ]
     }
   ],
@@ -104,10 +292,10 @@
     {
       "name": "Catalogue éditable",
       "blocks": [
-        { "type": "product", "settings": { "title": "Glow Skin Crème",    "category": "Beauté",      "description": "Hydratation intense, éclat visible en 7 jours.", "price_label": "24 900 FCFA", "compare_label": "32 000 FCFA" } },
-        { "type": "product", "settings": { "title": "Trim Active Plus",   "category": "Amincissant", "description": "Programme silhouette 28 jours.",                   "price_label": "18 500 FCFA" } },
-        { "type": "product", "settings": { "title": "Curve Up Gel",       "category": "Postérieur",  "description": "Routine tonifiante et raffermissante.",            "price_label": "27 500 FCFA" } },
-        { "type": "product", "settings": { "title": "Confidence Kit",     "category": "Promo",       "description": "Rituel complet beauté + silhouette.",              "price_label": "54 000 FCFA", "compare_label": "72 000 FCFA" } }
+        { "type": "product", "settings": { "title": "Glow Skin Crème",    "category": "Beauté",      "description": "Hydratation intense, éclat visible en 7 jours.",   "details": "<p>Soin quotidien enrichi en huile d'argan, acide hyaluronique et vitamine E. Texture fondante, parfum discret.</p><p>Conseils : appliquer matin et soir sur peau propre, du visage au décolleté.</p>", "price_fcfa": 24900, "compare_fcfa": 32000, "link": "/products/glow-skin" } },
+        { "type": "product", "settings": { "title": "Trim Active Plus",   "category": "Amincissant", "description": "Programme silhouette 28 jours.",                     "details": "<p>Complexe drainant à base de plantes (thé vert, guarana, reine-des-prés). Formule non-stimulante, idéale pour accompagner une alimentation équilibrée.</p><p>Posologie : 2 gélules par jour avec un grand verre d'eau.</p>", "price_fcfa": 18500, "link": "/products/trim-active" } },
+        { "type": "product", "settings": { "title": "Curve Up Gel",       "category": "Postérieur",  "description": "Routine tonifiante et raffermissante.",              "details": "<p>Gel tonifiant à la caféine végétale et beurre de karité. Masse les zones ciblées pendant 2-3 minutes en mouvements circulaires.</p>", "price_fcfa": 27500, "link": "/products/curve-up" } },
+        { "type": "product", "settings": { "title": "Confidence Kit",     "category": "Promo",       "description": "Rituel complet beauté + silhouette.",                "details": "<p>Coffret signature 5 produits hero : Glow Skin, Trim Active, Curve Up, Velvet Body et un sachet découverte de Slim Detox Tea. Livraison offerte.</p>", "price_fcfa": 54000, "compare_fcfa": 72000, "link": "/products/confidence" } }
       ]
     }
   ]

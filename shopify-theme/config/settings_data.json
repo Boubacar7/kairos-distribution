@@ -21,7 +21,15 @@
     "container_max_width": 1280,
     "card_image_ratio": "3/4",
     "card_image_fit": "cover",
-    "card_hover_lift": true
+    "card_hover_lift": true,
+    "currency_default": "FCFA",
+    "currency_rate_eur": 656,
+    "currency_rate_usd": 610,
+    "currency_rate_cad": 445,
+    "currency_show_fcfa": true,
+    "currency_show_eur": true,
+    "currency_show_usd": true,
+    "currency_show_cad": true
   },
   "presets": {
     "Kairos — défaut": {
