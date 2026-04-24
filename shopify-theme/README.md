@@ -108,10 +108,58 @@ bloc n'a pas d'image, il récupère automatiquement `community-1.jpg` à `4.jpg`
 **Customize → Theme settings → Couleurs** pour changer bordeaux, rose, crème,
 ink. Les variables CSS se propagent partout.
 
+## Multi-devises (FCFA / EUR / USD / CAD)
+
+Un switcher de devise s'affiche dans le header. Il convertit en direct (JS)
+les prix saisis en FCFA dans les blocks produits du catalogue éditable.
+
+**Configurer les taux** : Customize → Theme settings → Devises :
+- `1 EUR = N FCFA` (défaut 656)
+- `1 USD = N FCFA` (défaut 610)
+- `1 CAD = N FCFA` (défaut 445)
+- Cases à cocher pour afficher/masquer chaque devise
+- Devise par défaut
+
+**Côté block produit** : deux modes au choix.
+- Remplir `price_fcfa` (nombre) → la conversion automatique s'applique dès
+  que l'utilisateur change de devise
+- Laisser vide et utiliser `price_label` (texte libre) → affiché tel quel
+
+Les prix Shopify natifs (sur les vrais produits importés) utilisent Shopify
+Markets et la devise de la boutique — ils ne sont pas impactés par le switcher.
+
+## Multi-langues (FR / EN)
+
+Le switcher de langue utilise `{% form 'localization' %}`, donc il s'appuie
+sur la **vraie** infrastructure Shopify multi-langue.
+
+Pour que ça marche :
+1. **Settings → Languages → Add language → Anglais**
+2. Publie la langue (sinon les clients ne la voient pas)
+3. Traductions : installe l'app **Translate & Adapt** (gratuite, officielle
+   Shopify) pour traduire produits / collections / pages
+
+Le thème livre les traductions UI (panier, add to cart, avis, etc.) en FR et
+EN dans `locales/fr.default.json` et `locales/en.json`.
+
+## Détail produit
+
+Deux niveaux de fiche selon le cas :
+
+- **Block « Produit » du catalogue éditable** : clic sur la carte → popup
+  modal avec l'image, le prix (dans la devise active), la description
+  longue (champ `details` rich text) et un CTA « Voir la fiche complète »
+  qui pointe vers `/products/xxx` si l'URL est renseignée.
+
+- **Vrai produit Shopify** (`/products/xxx`) : template `product.json`
+  rend `sections/main-product.liquid` avec image, prix, description
+  (affichée sous un kicker « Description »), sélecteur quantité et
+  bouton Add to cart.
+
 ## Limites du starter
 
 Pas encore dans ce thème :
-- Sélecteur de variantes (tailles/couleurs)
+- Sélecteur de variantes (tailles/couleurs) sur la page produit
 - Drawer panier animé (panier = page `/cart`)
 - Comptes clients customisés
 - Popup newsletter, mega-menu, sticky cart

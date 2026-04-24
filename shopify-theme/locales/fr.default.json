@@ -7,6 +7,12 @@
     "404": {
       "subtext": "La page demandée est introuvable.",
       "link": "Retour à l'accueil"
+    },
+    "language": {
+      "dropdown_label": "Choisir la langue"
+    },
+    "currency": {
+      "dropdown_label": "Choisir la devise"
     }
   },
   "sections": {
@@ -20,7 +26,9 @@
   "products": {
     "product": {
       "add_to_cart": "Ajouter au panier",
-      "sold_out": "Rupture de stock"
+      "sold_out": "Rupture de stock",
+      "description": "Description",
+      "view_details": "Voir la fiche complète"
     }
   }
 }

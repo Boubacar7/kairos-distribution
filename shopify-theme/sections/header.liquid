@@ -28,6 +28,31 @@
     </nav>
 
     <div class="nav-right">
+      {%- assign rates = '{' -%}
+      {%- capture rates -%}
+        {"FCFA":1,"EUR":{{ settings.currency_rate_eur | default: 656 }},"USD":{{ settings.currency_rate_usd | default: 610 }},"CAD":{{ settings.currency_rate_cad | default: 445 }}}
+      {%- endcapture -%}
+      <div class="cur-seg" data-currency-switcher data-rates="{{ rates | strip }}" data-default="{{ settings.currency_default | default: 'FCFA' }}">
+        {%- if settings.currency_show_fcfa -%}<button type="button" class="cur-btn" data-currency="FCFA">FCFA</button>{%- endif -%}
+        {%- if settings.currency_show_eur  -%}<button type="button" class="cur-btn" data-currency="EUR">EUR</button>{%- endif -%}
+        {%- if settings.currency_show_usd  -%}<button type="button" class="cur-btn" data-currency="USD">USD</button>{%- endif -%}
+        {%- if settings.currency_show_cad  -%}<button type="button" class="cur-btn" data-currency="CAD">CAD</button>{%- endif -%}
+      </div>
+
+      {%- if localization.available_languages.size > 1 -%}
+        {%- form 'localization', id: 'header-language-form' -%}
+          <div class="lang-seg" role="group" aria-label="Langue">
+            {%- for lang in localization.available_languages -%}
+              <button type="submit" name="locale_code" value="{{ lang.iso_code }}"
+                      class="lang-btn{% if lang.iso_code == localization.language.iso_code %} on{% endif %}"
+                      aria-current="{% if lang.iso_code == localization.language.iso_code %}true{% else %}false{% endif %}">
+                {{ lang.iso_code | upcase }}
+              </button>
+            {%- endfor -%}
+          </div>
+        {%- endform -%}
+      {%- endif -%}
+
       <a href="{{ routes.cart_url }}" class="nav-cart" aria-label="Panier">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 4h2l2.5 12h11L21 7H6"/>
@@ -64,6 +89,45 @@
   .site-header.is-home.is-transparent .brand-wrap {
     opacity: 0;
     pointer-events: none;
+  }
+
+  /* Currency switcher */
+  .cur-seg {
+    display: flex; gap: 3px; padding: 3px;
+    border-radius: var(--r-pill);
+    background: rgba(255,255,255,.15);
+    backdrop-filter: blur(4px);
+  }
+  .site-header.is-opaque .cur-seg { background: var(--cream-2); }
+  .cur-btn {
+    padding: 5px 9px; font-size: 10px; font-weight: 700;
+    border-radius: var(--r-pill);
+    color: #fff; cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .site-header.is-opaque .cur-btn { color: var(--ink-2); }
+  .cur-btn.on { background: #fff; color: var(--bordeaux); }
+  .site-header.is-opaque .cur-btn.on { background: var(--bordeaux); color: #fff; }
+
+  /* Language switcher */
+  .lang-seg {
+    display: flex; gap: 3px; padding: 3px;
+    border-radius: var(--r-pill);
+    background: rgba(255,255,255,.12);
+  }
+  .site-header.is-opaque .lang-seg { background: var(--cream-2); }
+  .lang-btn {
+    padding: 5px 9px; font-size: 10px; font-weight: 700;
+    border-radius: var(--r-pill);
+    color: #fff; cursor: pointer;
+    border: 0; background: none;
+  }
+  .site-header.is-opaque .lang-btn { color: var(--ink-2); }
+  .lang-btn.on { background: #fff; color: var(--bordeaux); }
+  .site-header.is-opaque .lang-btn.on { background: var(--bordeaux); color: #fff; }
+
+  @media (max-width: 700px) {
+    .cur-seg, .lang-seg { display: none; }
   }
   .nav-mobile-btn {
     display: none;
@@ -170,6 +234,59 @@
     }, { rootMargin: '-40% 0px -40% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
 
     sections.forEach(function(el) { observer.observe(el); });
+  })();
+
+  // Multi-currency switcher (FCFA / EUR / USD / CAD)
+  (function() {
+    var segment = document.querySelector('[data-currency-switcher]');
+    if (!segment) return;
+    var rates = JSON.parse(segment.getAttribute('data-rates') || '{}');
+    var defaultCur = segment.getAttribute('data-default') || 'FCFA';
+    var stored = null;
+    try { stored = localStorage.getItem('kairos_currency'); } catch(e) {}
+    var active = (stored && rates[stored]) ? stored : defaultCur;
+
+    function fmt(fcfa, cur) {
+      var rate = rates[cur] || 1;
+      var value = fcfa / rate;
+      if (cur === 'FCFA') {
+        return Math.round(value).toLocaleString('fr-FR').replace(/,/g, ' ') + ' FCFA';
+      }
+      if (cur === 'EUR') {
+        return value.toFixed(2).replace('.', ',') + ' €';
+      }
+      if (cur === 'USD') {
+        return '$' + value.toFixed(2);
+      }
+      if (cur === 'CAD') {
+        return 'CA$' + value.toFixed(2);
+      }
+      return value.toFixed(2) + ' ' + cur;
+    }
+
+    function applyCurrency(cur) {
+      active = cur;
+      try { localStorage.setItem('kairos_currency', cur); } catch(e) {}
+      segment.querySelectorAll('.cur-btn').forEach(function(b) {
+        if (b.getAttribute('data-currency') === cur) b.classList.add('on');
+        else b.classList.remove('on');
+      });
+      document.querySelectorAll('[data-price-fcfa]').forEach(function(el) {
+        var base = parseInt(el.getAttribute('data-price-fcfa'), 10);
+        if (!isNaN(base)) el.textContent = fmt(base, cur);
+      });
+      document.querySelectorAll('[data-compare-fcfa]').forEach(function(el) {
+        var base = parseInt(el.getAttribute('data-compare-fcfa'), 10);
+        if (!isNaN(base)) el.textContent = fmt(base, cur);
+      });
+    }
+
+    segment.querySelectorAll('.cur-btn').forEach(function(b) {
+      b.addEventListener('click', function() {
+        applyCurrency(b.getAttribute('data-currency'));
+      });
+    });
+    applyCurrency(active);
   })();
 </script>
 

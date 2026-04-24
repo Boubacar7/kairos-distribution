@@ -96,9 +96,14 @@ export type Review = {
   createdAt: string;
 };
 
-export type Currency = 'FCFA' | 'EUR' | 'USD';
+export type Currency = 'FCFA' | 'EUR' | 'USD' | 'CAD';
 
-const RATES: Record<Currency, number> = { FCFA: 1, EUR: 1 / 656, USD: 1 / 610 };
+const RATES: Record<Currency, number> = {
+  FCFA: 1,
+  EUR: 1 / 656,
+  USD: 1 / 610,
+  CAD: 1 / 445,
+};
 
 export function formatPrice(fcfa: number, currency: Currency = 'FCFA'): string {
   const v = fcfa * RATES[currency];
@@ -106,5 +111,7 @@ export function formatPrice(fcfa: number, currency: Currency = 'FCFA'): string {
     return `${Math.round(v).toLocaleString('fr-FR').replace(/,/g, ' ')} FCFA`;
   }
   if (currency === 'EUR') return `${v.toFixed(2).replace('.', ',')} €`;
-  return `$${v.toFixed(2)}`;
+  if (currency === 'USD') return `$${v.toFixed(2)}`;
+  if (currency === 'CAD') return `CA$${v.toFixed(2)}`;
+  return `${v.toFixed(2)} ${currency}`;
 }

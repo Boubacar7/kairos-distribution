@@ -15,7 +15,7 @@ const LINKS: NavItem[] = [
   { href: '/#retours', label: 'Retours clients', anchor: 'retours' },
 ];
 
-const CURRENCIES: Currency[] = ['FCFA', 'EUR', 'USD'];
+const CURRENCIES: Currency[] = ['FCFA', 'EUR', 'USD', 'CAD'];
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -74,7 +74,7 @@ export default function Navbar() {
   useEffect(() => {
     try {
       const v = localStorage.getItem('kairos_currency') as Currency | null;
-      if (v === 'FCFA' || v === 'EUR' || v === 'USD') setCurrency(v);
+      if (v === 'FCFA' || v === 'EUR' || v === 'USD' || v === 'CAD') setCurrency(v);
     } catch {}
   }, []);
 
