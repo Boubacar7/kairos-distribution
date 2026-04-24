@@ -19,14 +19,21 @@
       }
     },
     "featured": {
-      "type": "featured-collection",
+      "type": "editable-catalog",
       "settings": {
+        "anchor": "produits",
         "kicker": "Catalogue",
         "heading": "Nos rituels du moment",
-        "collection": "frontpage",
-        "products_to_show": 4,
+        "view_all_label": "Tout voir",
         "view_all_link": "/collections/all"
-      }
+      },
+      "blocks": {
+        "b1": { "type": "product", "settings": { "title": "Glow Skin Crème",    "category": "Beauté",      "description": "Hydratation intense, éclat visible en 7 jours.", "price_label": "24 900 FCFA", "compare_label": "32 000 FCFA", "link": "/products/glow-skin" } },
+        "b2": { "type": "product", "settings": { "title": "Trim Active Plus",   "category": "Amincissant", "description": "Programme silhouette 28 jours.",                   "price_label": "18 500 FCFA", "link": "/products/trim-active" } },
+        "b3": { "type": "product", "settings": { "title": "Curve Up Gel",       "category": "Postérieur",  "description": "Routine tonifiante et raffermissante.",            "price_label": "27 500 FCFA", "link": "/products/curve-up" } },
+        "b4": { "type": "product", "settings": { "title": "Confidence Kit",     "category": "Promo",       "description": "Rituel complet beauté + silhouette.",              "price_label": "54 000 FCFA", "compare_label": "72 000 FCFA", "link": "/products/confidence" } }
+      },
+      "block_order": ["b1", "b2", "b3", "b4"]
     },
     "reviews": {
       "type": "reviews-grid",

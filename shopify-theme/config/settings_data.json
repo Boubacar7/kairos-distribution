@@ -2,17 +2,37 @@
   "current": {
     "color_bordeaux": "#6d1e3a",
     "color_bordeaux_dark": "#521529",
-    "color_rose": "#f5d9d3",
+    "color_rose_50": "#fbe8e3",
+    "color_rose_100": "#f5d9d3",
+    "color_rose_200": "#edc5bd",
     "color_cream": "#fbf4ef",
-    "color_ink": "#1a1414"
+    "color_cream_2": "#f6ebe3",
+    "color_ink": "#1a1414",
+    "color_ink_2": "#3b2e2e",
+    "color_muted": "#7a6a6a",
+    "type_display_weight": 400,
+    "type_body_weight": 400,
+    "type_base_size": 15,
+    "radius_sm": 12,
+    "radius_md": 18,
+    "radius_lg": 28,
+    "section_pad_desktop": 72,
+    "section_pad_mobile": 48,
+    "container_max_width": 1280,
+    "card_image_ratio": "3/4",
+    "card_image_fit": "cover",
+    "card_hover_lift": true
   },
   "presets": {
     "Kairos — défaut": {
       "color_bordeaux": "#6d1e3a",
       "color_bordeaux_dark": "#521529",
-      "color_rose": "#f5d9d3",
+      "color_rose_100": "#f5d9d3",
       "color_cream": "#fbf4ef",
-      "color_ink": "#1a1414"
+      "color_ink": "#1a1414",
+      "type_display_weight": 400,
+      "radius_lg": 28,
+      "card_image_ratio": "3/4"
     }
   }
 }

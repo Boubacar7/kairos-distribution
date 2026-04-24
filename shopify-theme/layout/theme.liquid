@@ -27,6 +27,44 @@
 
     {{ 'theme.css' | asset_url | stylesheet_tag }}
 
+    <style>
+      :root {
+        --bordeaux:     {{ settings.color_bordeaux      | default: '#6d1e3a' }};
+        --bordeaux-dk:  {{ settings.color_bordeaux_dark | default: '#521529' }};
+        --rose-50:      {{ settings.color_rose_50       | default: '#fbe8e3' }};
+        --rose-100:     {{ settings.color_rose_100      | default: '#f5d9d3' }};
+        --rose-200:     {{ settings.color_rose_200      | default: '#edc5bd' }};
+        --cream:        {{ settings.color_cream         | default: '#fbf4ef' }};
+        --cream-2:      {{ settings.color_cream_2       | default: '#f6ebe3' }};
+        --ink:          {{ settings.color_ink           | default: '#1a1414' }};
+        --ink-2:        {{ settings.color_ink_2         | default: '#3b2e2e' }};
+        --muted:        {{ settings.color_muted         | default: '#7a6a6a' }};
+        --r-sm: {{ settings.radius_sm | default: 12 }}px;
+        --r-md: {{ settings.radius_md | default: 18 }}px;
+        --r-lg: {{ settings.radius_lg | default: 28 }}px;
+        --body-size:    {{ settings.type_base_size       | default: 15 }}px;
+        --body-weight:  {{ settings.type_body_weight     | default: 400 }};
+        --display-weight:{{ settings.type_display_weight | default: 400 }};
+        --card-ratio:   {{ settings.card_image_ratio     | default: '3/4' }};
+        --card-fit:     {{ settings.card_image_fit       | default: 'cover' }};
+        --section-pad-desktop: {{ settings.section_pad_desktop | default: 72 }}px;
+        --section-pad-mobile:  {{ settings.section_pad_mobile  | default: 48 }}px;
+        --container-max: {{ settings.container_max_width | default: 1280 }}px;
+      }
+      body { font-size: var(--body-size); font-weight: var(--body-weight); }
+      .display, h1, h2, h3, h4 { font-weight: var(--display-weight); }
+      .container { max-width: var(--container-max); }
+      .section-pad { padding-top: var(--section-pad-desktop); padding-bottom: var(--section-pad-desktop); }
+      @media (max-width: 720px) {
+        .section-pad { padding-top: var(--section-pad-mobile); padding-bottom: var(--section-pad-mobile); }
+      }
+      .product-card .media { aspect-ratio: var(--card-ratio); }
+      .product-card .media img { object-fit: var(--card-fit); }
+      {%- if settings.card_hover_lift == false -%}
+        .product-card:hover { transform: none; box-shadow: none; }
+      {%- endif -%}
+    </style>
+
     {{ content_for_header }}
   </head>
   <body class="template-{{ template | split: '.' | first }}">
