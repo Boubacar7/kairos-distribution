@@ -1,0 +1,27 @@
+<article class="container screen-enter" style="padding-top: 90px; padding-bottom: 80px; max-width: 760px;">
+  <div class="breadcrumbs">
+    <a href="{{ routes.root_url }}">{{ 'accessibility.home' | t }}</a>
+    <span>/</span>
+    <a href="{{ blog.url }}">{{ blog.title }}</a>
+    <span>/</span>
+    <span>{{ article.title }}</span>
+  </div>
+
+  <span class="kicker">{{ article.published_at | date: '%d %B %Y' }}</span>
+  <h1 class="display" style="font-size: clamp(32px, 5vw, 48px); letter-spacing: -.03em; margin: 8px 0 0;">
+    {{ article.title }}
+  </h1>
+  <p style="color:var(--muted);margin-top:8px;font-size:14px;">Par {{ article.author }}</p>
+
+  {%- if article.image -%}
+    <div style="margin:24px 0;border-radius:var(--r-lg);overflow:hidden;">
+      <img src="{{ article.image | image_url: width: 1400 }}" alt="{{ article.title }}" style="width:100%;height:auto;display:block;">
+    </div>
+  {%- endif -%}
+
+  <div style="font-size:15px;line-height:1.7;color:var(--ink-2);">{{ article.content }}</div>
+</article>
+
+{% schema %}
+{ "name": "Article", "settings": [] }
+{% endschema %}

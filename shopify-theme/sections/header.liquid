@@ -54,11 +54,10 @@
     </nav>
 
     <div class="nav-right">
-      {%- assign rates = '{' -%}
       {%- capture rates -%}
         {"FCFA":1,"EUR":{{ settings.currency_rate_eur | default: 656 }},"USD":{{ settings.currency_rate_usd | default: 610 }},"CAD":{{ settings.currency_rate_cad | default: 445 }}}
       {%- endcapture -%}
-      <div class="cur-seg" data-currency-switcher data-rates="{{ rates | strip }}" data-default="{{ settings.currency_default | default: 'FCFA' }}">
+      <div class="cur-seg" data-currency-switcher data-rates='{{ rates | strip }}' data-default="{{ settings.currency_default | default: 'FCFA' }}">
         {%- if settings.currency_show_fcfa -%}<button type="button" class="cur-btn" data-currency="FCFA">FCFA</button>{%- endif -%}
         {%- if settings.currency_show_eur  -%}<button type="button" class="cur-btn" data-currency="EUR">EUR</button>{%- endif -%}
         {%- if settings.currency_show_usd  -%}<button type="button" class="cur-btn" data-currency="USD">USD</button>{%- endif -%}

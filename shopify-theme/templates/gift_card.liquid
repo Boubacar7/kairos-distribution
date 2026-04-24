@@ -1,0 +1,13 @@
+<div class="container" style="padding:80px 48px;text-align:center;">
+  <span class="kicker">Carte cadeau</span>
+  <h1 class="display" style="font-size:clamp(32px,5vw,48px);letter-spacing:-.03em;margin:8px 0 24px;">
+    {{ gift_card.balance | money }}
+  </h1>
+  <div style="background:var(--cream-2);border-radius:var(--r-lg);padding:40px;max-width:520px;margin:0 auto;">
+    <div style="font-family:var(--f-mono);font-size:22px;letter-spacing:.1em;word-break:break-all;">{{ gift_card.code }}</div>
+    <p style="margin-top:16px;color:var(--muted);font-size:13px;">
+      Utilisez ce code lors du checkout.
+      {%- if gift_card.expires_on -%} Expire le {{ gift_card.expires_on | date: '%d %B %Y' }}.{%- endif -%}
+    </p>
+  </div>
+</div>

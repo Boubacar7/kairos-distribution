@@ -1,0 +1,31 @@
+<section class="container screen-enter" style="padding-top: 90px; padding-bottom: 80px;">
+  <h1 class="display" style="font-size: clamp(32px, 5vw, 48px); letter-spacing: -.03em;">{{ blog.title }}</h1>
+  {%- if blog.articles_count == 0 -%}
+    <p style="color: var(--muted); margin-top: 16px;">Aucun article pour le moment.</p>
+  {%- else -%}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:32px;">
+      {%- for article in blog.articles -%}
+        <a href="{{ article.url }}" style="text-decoration:none;color:inherit;">
+          {%- if article.image -%}
+            <div style="aspect-ratio:4/3;overflow:hidden;border-radius:var(--r-md);background:var(--rose-50);">
+              <img src="{{ article.image | image_url: width: 600 }}" alt="{{ article.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+          {%- endif -%}
+          <div style="margin-top:12px;">
+            <span class="kicker">{{ article.published_at | date: '%d %b %Y' }}</span>
+            <h3 class="display" style="font-size:20px;margin:6px 0 0;">{{ article.title }}</h3>
+            <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:8px 0 0;">
+              {{ article.excerpt | default: article.content | strip_html | truncate: 120 }}
+            </p>
+          </div>
+        </a>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+</section>
+
+<style>@media(max-width:800px){section>div{grid-template-columns:1fr !important;}}</style>
+
+{% schema %}
+{ "name": "Blog", "settings": [] }
+{% endschema %}

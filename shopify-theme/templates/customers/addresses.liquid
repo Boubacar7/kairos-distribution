@@ -1,0 +1,17 @@
+<section class="container" style="padding:90px 0 60px;max-width:720px;">
+  <div class="breadcrumbs"><a href="{{ routes.account_url }}">Mon compte</a><span>/</span><span>Adresses</span></div>
+  <h1 class="display" style="font-size:clamp(28px,4vw,36px);margin:8px 0 24px;">Mes adresses</h1>
+
+  {%- paginate customer.addresses by 6 -%}
+    {%- for address in customer.addresses -%}
+      <div style="border:1px solid var(--line);border-radius:var(--r-md);padding:16px;margin-bottom:12px;">
+        <div>{{ address | format_address }}</div>
+        <p style="font-size:13px;margin-top:8px;">
+          {%- if address == customer.default_address -%}<span class="chip">Par défaut</span>{%- endif -%}
+        </p>
+      </div>
+    {%- endfor -%}
+  {%- endpaginate -%}
+
+  <p style="font-size:13px;color:var(--muted);">La gestion complète des adresses (ajout, édition, suppression) se fait via l'interface Shopify standard — ce thème livre un rendu simple.</p>
+</section>
