@@ -4,19 +4,22 @@
   "sections": {
     "footer": {
       "type": "footer",
+      "settings": {
+        "brand_line_1": "My body goal",
+        "brand_line_2": "By Kairos.Distribution",
+        "about_text": "Beauté, silhouette et confiance. Expédition partout dans le monde.",
+        "whatsapp_phone": "",
+        "whatsapp_message": "Bonjour Kairos, je souhaite des informations sur vos produits.",
+        "snapchat_handle": "",
+        "order_tracking_url": "/account/orders",
+        "legal": "Tous droits réservés"
+      },
       "blocks": {
         "boutique": {
           "type": "link_column",
           "settings": {
             "heading": "Boutique",
             "menu": "footer"
-          }
-        },
-        "service": {
-          "type": "text_column",
-          "settings": {
-            "heading": "Service",
-            "content": "<p>WhatsApp / Snap</p><p>Suivi commande</p><p>Retours</p>"
           }
         },
         "livraison": {
@@ -27,7 +30,7 @@
           }
         }
       },
-      "block_order": ["boutique", "service", "livraison"]
+      "block_order": ["boutique", "livraison"]
     }
   },
   "order": ["footer"]

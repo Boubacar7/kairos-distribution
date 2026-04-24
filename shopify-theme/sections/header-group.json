@@ -7,6 +7,14 @@
       "settings": {
         "brand_line_1": "My body goal",
         "brand_line_2": "By Kairos.Distribution",
+        "link_1_label": "Accueil",
+        "link_1_url": "/",
+        "link_2_label": "Produits",
+        "link_2_url": "/#produits",
+        "link_3_label": "Avis clients",
+        "link_3_url": "/#avis",
+        "link_4_label": "Retours clients",
+        "link_4_url": "/#retours",
         "menu": "main-menu"
       }
     }
