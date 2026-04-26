@@ -11,7 +11,49 @@
         "button_2_label": "Avis clients",
         "button_2_link": "#avis"
       }
+    },
+    "categories": {
+      "type": "category-strip",
+      "settings": {
+        "menu": "main-menu"
+      }
+    },
+    "reviews": {
+      "type": "reviews-grid",
+      "settings": {
+        "anchor": "avis",
+        "kicker": "Avis clients",
+        "heading": "4.8/5 · avis vérifiés",
+        "rating": "4.8",
+        "rating_text": "Moyenne générale"
+      },
+      "blocks": {
+        "r1": { "type": "review", "settings": { "author": "Safi C.", "location": "Dakar", "rating": 5, "title": "Un vrai coup de cœur", "body": "Livraison rapide, emballage soigné et les produits tiennent leurs promesses." } },
+        "r2": { "type": "review", "settings": { "author": "Fatou N.", "location": "Abidjan", "rating": 5, "title": "Résultats visibles", "body": "Après 3 semaines de Trim Active, je vois une vraie différence." } },
+        "r3": { "type": "review", "settings": { "author": "Massara S.", "location": "Bamako", "rating": 4, "title": "Bon rapport qualité/prix", "body": "Le pack Lip & Glow est parfait pour découvrir la marque." } },
+        "r4": { "type": "review", "settings": { "author": "Awa C.", "location": "Cotonou", "rating": 5, "title": "Service impeccable", "body": "Équipe réactive, réponse sous 10 minutes en Snap." } }
+      },
+      "block_order": ["r1", "r2", "r3", "r4"]
+    },
+    "gallery": {
+      "type": "gallery-grid",
+      "settings": {
+        "anchor": "retours",
+        "kicker": "Retours clients",
+        "heading": "Photos partagées par la communauté"
+      },
+      "blocks": {
+        "p1": { "type": "photo" },
+        "p2": { "type": "photo" },
+        "p3": { "type": "photo" },
+        "p4": { "type": "photo" },
+        "p5": { "type": "photo" },
+        "p6": { "type": "photo" },
+        "p7": { "type": "photo" },
+        "p8": { "type": "photo" }
+      },
+      "block_order": ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"]
     }
   },
-  "order": ["hero"]
+  "order": ["hero", "categories", "reviews", "gallery"]
 }
