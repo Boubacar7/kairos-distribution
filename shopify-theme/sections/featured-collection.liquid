@@ -13,35 +13,37 @@
       {%- endif -%}
     </div>
 
-    {%- assign collection = collections[section.settings.collection] -%}
-    {%- assign limit = section.settings.products_to_show | default: 4 -%}
+    {%- assign chosen     = collections[section.settings.collection] -%}
+    {%- assign all_coll   = collections.all -%}
+    {%- assign limit      = section.settings.products_to_show | default: 8 -%}
+    {%- assign products_to_render = empty -%}
 
-    {%- if collection != blank and collection.products_count > 0 -%}
+    {%- if chosen != blank and chosen.products_count > 0 -%}
+      {%- assign products_to_render = chosen.products -%}
+    {%- elsif all_coll != blank and all_coll.products_count > 0 -%}
+      {%- assign products_to_render = all_coll.products -%}
+    {%- endif -%}
+
+    {%- if products_to_render != empty -%}
       <div class="product-grid">
-        {%- for product in collection.products limit: limit -%}
+        {%- for product in products_to_render limit: limit -%}
           {% render 'card-product', product: product %}
         {%- endfor -%}
       </div>
     {%- else -%}
       {%- comment -%}
-        Boutique encore vide : on affiche des produits démo baked-in dans le
-        thème. Dès que l'opérateur importe shopify-products.csv et associe
-        une collection (ex. "frontpage"), ce bloc disparaît automatiquement.
+        Boutique 100 % vide (pas un seul produit) : on affiche les cartes
+        démo baked-in avec leurs images d'assets pour que la home ne soit
+        jamais vide. Disparaissent dès qu'un produit est créé/importé.
       {%- endcomment -%}
       <div class="product-grid">
         {% render 'card-product-demo', handle: 'glow-skin',   title: 'Glow Skin Crème',      category: 'Beauté',      description: "Hydratation intense, éclat visible en 7 jours.", price_label: '24 900 FCFA', compare_label: '32 000 FCFA', image: 'glow-skin.png' %}
         {% render 'card-product-demo', handle: 'trim-active', title: 'Trim Active Plus',     category: 'Amincissant', description: 'Programme silhouette 28 jours.',                   price_label: '18 500 FCFA', image: 'trim-active.png' %}
         {% render 'card-product-demo', handle: 'curve-up',    title: 'Curve Up Gel',         category: 'Postérieur',  description: 'Routine tonifiante et raffermissante.',            price_label: '27 500 FCFA', image: 'curve-up.png' %}
         {% render 'card-product-demo', handle: 'confidence',  title: 'Confidence Kit',       category: 'Promo',       description: 'Rituel complet beauté + silhouette.',              price_label: '54 000 FCFA', compare_label: '72 000 FCFA', image: 'confidence.png' %}
-        {%- if limit > 4 -%}
-          {% render 'card-product-demo', handle: 'shape-mask',  title: 'Shape & Firm Masque', category: 'Postérieur',  description: 'Masque raffermissant express 20 min.',             price_label: '19 900 FCFA', image: 'shape-mask.png' %}
-          {% render 'card-product-demo', handle: 'lip-glow',    title: 'Lip & Glow Set',      category: 'Promo',       description: 'Pack découverte lèvres + visage.',                 price_label: '15 900 FCFA', compare_label: '22 000 FCFA' %}
-          {% render 'card-product-demo', handle: 'velvet-body', title: 'Velvet Body Milk',    category: 'Beauté',      description: 'Lait corps soyeux karité + coco.',                 price_label: '12 900 FCFA' %}
-          {% render 'card-product-demo', handle: 'slim-tea',    title: 'Slim Detox Tea',      category: 'Amincissant', description: 'Infusion drainante 21 jours.',                     price_label: '9 500 FCFA' %}
-        {%- endif -%}
       </div>
       <p style="margin-top:24px;color:var(--muted);font-size:12px;font-style:italic;">
-        Aperçu démo — importe <code>shopify-products.csv</code> puis lie une collection pour passer en réel.
+        Aperçu démo — ajoute des produits dans Shopify (Products → Add product ou import CSV) pour voir les vrais produits ici.
       </p>
     {%- endif -%}
   </div>
@@ -51,12 +53,13 @@
 {
   "name": "Collection en vedette",
   "settings": [
-    { "type": "text", "id": "anchor", "label": "Ancre (id)", "default": "produits" },
-    { "type": "text", "id": "kicker", "label": "Kicker (petit titre)", "default": "Catalogue" },
+    { "type": "text", "id": "anchor",  "label": "Ancre (id)", "default": "produits" },
+    { "type": "text", "id": "kicker",  "label": "Kicker (petit titre)", "default": "Catalogue" },
     { "type": "text", "id": "heading", "label": "Titre", "default": "Nos rituels du moment" },
-    { "type": "collection", "id": "collection", "label": "Collection" },
-    { "type": "range", "id": "products_to_show", "label": "Nombre de produits", "min": 2, "max": 12, "step": 1, "default": 4 },
-    { "type": "url", "id": "view_all_link", "label": "Lien « Tout voir »" }
+    { "type": "collection", "id": "collection", "label": "Collection",
+      "info": "Si vide ou collection inexistante, le thème affiche tous les produits de la boutique." },
+    { "type": "range", "id": "products_to_show", "label": "Nombre de produits", "min": 2, "max": 12, "step": 1, "default": 8 },
+    { "type": "url", "id": "view_all_link", "label": "Lien « Tout voir »", "default": "/collections/all" }
   ],
   "presets": [{ "name": "Collection en vedette" }]
 }

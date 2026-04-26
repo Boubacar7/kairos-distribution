@@ -1,24 +1,3 @@
-{%- assign wa_phone     = section.settings.whatsapp_phone | default: '' -%}
-{%- assign wa_message   = section.settings.whatsapp_message | default: 'Bonjour Kairos, je souhaite des informations sur vos produits.' -%}
-{%- assign snap_handle  = section.settings.snapchat_handle | default: '' -%}
-{%- assign tracking_url = section.settings.order_tracking_url | default: '/account/orders' -%}
-
-{%- capture wa_href -%}
-  {%- if wa_phone != blank -%}
-    https://wa.me/{{ wa_phone | replace: '+', '' | replace: ' ', '' | replace: '-', '' }}?text={{ wa_message | url_encode }}
-  {%- else -%}
-    #
-  {%- endif -%}
-{%- endcapture -%}
-
-{%- capture snap_href -%}
-  {%- if snap_handle != blank -%}
-    https://www.snapchat.com/add/{{ snap_handle }}
-  {%- else -%}
-    #
-  {%- endif -%}
-{%- endcapture -%}
-
 <footer class="site-footer">
   <div class="container">
     <div class="ftr-grid">
@@ -48,28 +27,19 @@
       <div>
         <span class="kicker">Service</span>
         <div class="ftr-contacts">
-          {%- if wa_phone != blank -%}
-            <a class="ftr-btn ftr-btn-wa" href="{{ wa_href | strip }}" target="_blank" rel="noopener">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M20.5 3.5A11.9 11.9 0 0 0 12 0C5.4 0 0 5.4 0 12c0 2.1.6 4.2 1.6 6L0 24l6.2-1.6c1.8 1 3.8 1.5 5.8 1.5 6.6 0 12-5.4 12-12 0-3.2-1.2-6.2-3.5-8.4zM12 21.8c-1.8 0-3.6-.5-5.2-1.4l-.4-.2-3.7 1 1-3.6-.2-.4A9.8 9.8 0 0 1 2.2 12C2.2 6.6 6.6 2.2 12 2.2c2.6 0 5.1 1 7 2.9 1.9 1.9 2.9 4.4 2.9 7 0 5.4-4.4 9.7-9.9 9.7zm5.4-7.3c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.2-.2.3-.8.9-1 1.1-.2.2-.4.2-.6.1-1.9-.9-3.1-1.7-4.4-3.8-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.5-.1-.1-.7-1.6-.9-2.1-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1.1 1-1.1 2.5 0 1.5 1.1 2.9 1.3 3.1.1.2 2.2 3.3 5.3 4.6.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/>
-              </svg>
+          {%- if section.settings.whatsapp_phone != blank -%}
+            {%- assign wa_phone_clean = section.settings.whatsapp_phone | replace: '+', '' | replace: ' ', '' | replace: '-', '' -%}
+            {%- assign wa_msg = section.settings.whatsapp_message | default: 'Bonjour' | url_encode -%}
+            <a class="ftr-btn ftr-btn-wa" href="https://wa.me/{{ wa_phone_clean }}?text={{ wa_msg }}" target="_blank" rel="noopener">
               WhatsApp
             </a>
           {%- endif -%}
-          {%- if snap_handle != blank -%}
-            <a class="ftr-btn ftr-btn-snap" href="{{ snap_href | strip }}" target="_blank" rel="noopener">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12.2 1.5c3.6 0 6.2 2.3 6.2 6.2v1.8c.1.1.3.1.5.2.3.1.7.2 1.1.2.6 0 1.1-.2 1.6-.4.2-.1.4-.2.6-.2.4 0 .8.2.9.6.1.4-.1.8-.5 1-.2.1-.5.2-.8.3-.6.3-1.4.6-1.5 1-.1.2 0 .5.3.9.2.5 1.5 2.6 3.7 2.9.2 0 .4.2.4.5s-.2.5-.4.5c-.1 0-.2.1-.3.1-.5.1-.9.2-1.2.6-.2.3-.2.8-.1 1.4.1.3 0 .6-.3.7-.3.1-.7 0-1.4-.2-.3-.1-.6-.1-1-.1-.5 0-1 .1-1.6.3-.6.2-1.3.7-2.1 1.2-1 .7-2.1 1.4-3.6 1.4h-.2c-1.5 0-2.6-.7-3.6-1.4-.8-.5-1.5-1-2.1-1.2-.6-.2-1.1-.3-1.6-.3-.4 0-.7 0-1 .1-.7.2-1.1.3-1.4.2-.3-.1-.4-.4-.3-.7.1-.6.1-1.1-.1-1.4-.3-.4-.7-.5-1.2-.6-.1 0-.2-.1-.3-.1-.3 0-.4-.2-.4-.5s.2-.5.4-.5c2.2-.3 3.5-2.4 3.7-2.9.3-.5.4-.8.3-.9-.1-.4-.9-.7-1.5-1-.3-.1-.6-.2-.8-.3-.4-.2-.6-.6-.5-1 .2-.4.5-.6.9-.6.2 0 .4.1.6.2.5.2 1 .4 1.6.4.4 0 .8-.1 1.1-.2.2-.1.4-.1.5-.2V7.7c0-3.9 2.6-6.2 6.2-6.2z"/>
-              </svg>
+          {%- if section.settings.snapchat_handle != blank -%}
+            <a class="ftr-btn ftr-btn-snap" href="https://www.snapchat.com/add/{{ section.settings.snapchat_handle }}" target="_blank" rel="noopener">
               Snapchat
             </a>
           {%- endif -%}
-          <a class="ftr-btn ftr-btn-track" href="{{ tracking_url }}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/>
-              <circle cx="7" cy="18" r="1.5" fill="currentColor"/>
-              <circle cx="17" cy="18" r="1.5" fill="currentColor"/>
-            </svg>
+          <a class="ftr-btn ftr-btn-track" href="{{ section.settings.order_tracking_url | default: '/account/orders' }}">
             Suivi commande
           </a>
         </div>
@@ -115,10 +85,10 @@
     { "type": "textarea", "id": "about_text", "label": "À propos", "default": "Beauté, silhouette et confiance. Expédition partout dans le monde." },
 
     { "type": "header", "content": "Contact rapide" },
-    { "type": "text", "id": "whatsapp_phone", "label": "Numéro WhatsApp (avec indicatif)", "info": "Ex. +221770000000. Laisse vide pour masquer le bouton.", "default": "" },
+    { "type": "text", "id": "whatsapp_phone", "label": "Numéro WhatsApp (avec indicatif)", "info": "Ex. +221770000000. Laisse vide pour masquer le bouton." },
     { "type": "textarea", "id": "whatsapp_message", "label": "Message pré-rempli WhatsApp", "default": "Bonjour Kairos, je souhaite des informations sur vos produits." },
-    { "type": "text", "id": "snapchat_handle", "label": "Identifiant Snapchat", "info": "Ex. kairos.distribution. Laisse vide pour masquer le bouton.", "default": "" },
-    { "type": "url",  "id": "order_tracking_url", "label": "Lien « Suivi commande »", "default": "/account/orders", "info": "URL ou page de suivi (/pages/suivi)." },
+    { "type": "text", "id": "snapchat_handle", "label": "Identifiant Snapchat", "info": "Ex. kairos.distribution. Laisse vide pour masquer le bouton." },
+    { "type": "url",  "id": "order_tracking_url", "label": "Lien « Suivi commande »", "default": "/account/orders" },
 
     { "type": "text", "id": "legal", "label": "Mention bas", "default": "Tous droits réservés" }
   ],
