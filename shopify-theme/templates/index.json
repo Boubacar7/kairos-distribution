@@ -7,7 +7,7 @@
         "line_2": "By Kairos.Distribution",
         "line_3": "Beauté · Silhouette · Confiance",
         "button_1_label": "Voir les produits →",
-        "button_1_link": "/collections/all",
+        "button_1_link": "#produits",
         "button_2_label": "Avis clients",
         "button_2_link": "#avis"
       }
@@ -17,6 +17,23 @@
       "settings": {
         "menu": "main-menu"
       }
+    },
+    "featured": {
+      "type": "editable-catalog",
+      "settings": {
+        "anchor": "produits",
+        "kicker": "Catalogue",
+        "heading": "Nos rituels du moment",
+        "view_all_label": "Tout voir",
+        "view_all_link": "/collections/all"
+      },
+      "blocks": {
+        "b1": { "type": "product", "settings": { "title": "Glow Skin Crème",    "category": "Beauté",      "description": "Hydratation intense, éclat visible en 7 jours.", "price_fcfa": 24900, "compare_fcfa": 32000, "link": "/products/glow-skin" } },
+        "b2": { "type": "product", "settings": { "title": "Trim Active Plus",   "category": "Amincissant", "description": "Programme silhouette 28 jours.",                   "price_fcfa": 18500, "link": "/products/trim-active" } },
+        "b3": { "type": "product", "settings": { "title": "Curve Up Gel",       "category": "Postérieur",  "description": "Routine tonifiante et raffermissante.",            "price_fcfa": 27500, "link": "/products/curve-up" } },
+        "b4": { "type": "product", "settings": { "title": "Confidence Kit",     "category": "Promo",       "description": "Rituel complet beauté + silhouette.",              "price_fcfa": 54000, "compare_fcfa": 72000, "link": "/products/confidence" } }
+      },
+      "block_order": ["b1", "b2", "b3", "b4"]
     },
     "reviews": {
       "type": "reviews-grid",
@@ -55,5 +72,5 @@
       "block_order": ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"]
     }
   },
-  "order": ["hero", "categories", "reviews", "gallery"]
+  "order": ["hero", "categories", "featured", "reviews", "gallery"]
 }
