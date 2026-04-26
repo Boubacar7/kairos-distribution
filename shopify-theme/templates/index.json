@@ -7,70 +7,11 @@
         "line_2": "By Kairos.Distribution",
         "line_3": "Beauté · Silhouette · Confiance",
         "button_1_label": "Voir les produits →",
-        "button_1_link": "#produits",
+        "button_1_link": "/collections/all",
         "button_2_label": "Avis clients",
         "button_2_link": "#avis"
       }
-    },
-    "categories": {
-      "type": "category-strip",
-      "settings": {
-        "menu": "main-menu"
-      }
-    },
-    "featured": {
-      "type": "editable-catalog",
-      "settings": {
-        "anchor": "produits",
-        "kicker": "Catalogue",
-        "heading": "Nos rituels du moment",
-        "view_all_label": "Tout voir",
-        "view_all_link": "/collections/all"
-      },
-      "blocks": {
-        "b1": { "type": "product", "settings": { "title": "Glow Skin Crème",    "category": "Beauté",      "description": "Hydratation intense, éclat visible en 7 jours.", "price_label": "24 900 FCFA", "compare_label": "32 000 FCFA", "link": "/products/glow-skin" } },
-        "b2": { "type": "product", "settings": { "title": "Trim Active Plus",   "category": "Amincissant", "description": "Programme silhouette 28 jours.",                   "price_label": "18 500 FCFA", "link": "/products/trim-active" } },
-        "b3": { "type": "product", "settings": { "title": "Curve Up Gel",       "category": "Postérieur",  "description": "Routine tonifiante et raffermissante.",            "price_label": "27 500 FCFA", "link": "/products/curve-up" } },
-        "b4": { "type": "product", "settings": { "title": "Confidence Kit",     "category": "Promo",       "description": "Rituel complet beauté + silhouette.",              "price_label": "54 000 FCFA", "compare_label": "72 000 FCFA", "link": "/products/confidence" } }
-      },
-      "block_order": ["b1", "b2", "b3", "b4"]
-    },
-    "reviews": {
-      "type": "reviews-grid",
-      "settings": {
-        "anchor": "avis",
-        "kicker": "Avis clients",
-        "heading": "4.8/5 · avis vérifiés",
-        "rating": "4.8",
-        "rating_text": "Moyenne générale"
-      },
-      "blocks": {
-        "r1": { "type": "review", "settings": { "author": "Safi C.", "location": "Dakar", "rating": 5, "title": "Un vrai coup de cœur", "body": "Livraison rapide, emballage soigné et les produits tiennent leurs promesses." } },
-        "r2": { "type": "review", "settings": { "author": "Fatou N.", "location": "Abidjan", "rating": 5, "title": "Résultats visibles", "body": "Après 3 semaines de Trim Active, je vois une vraie différence." } },
-        "r3": { "type": "review", "settings": { "author": "Massara S.", "location": "Bamako", "rating": 4, "title": "Bon rapport qualité/prix", "body": "Le pack Lip & Glow est parfait pour découvrir la marque." } },
-        "r4": { "type": "review", "settings": { "author": "Awa C.", "location": "Cotonou", "rating": 5, "title": "Service impeccable", "body": "Équipe réactive, réponse sous 10 minutes en Snap." } }
-      },
-      "block_order": ["r1", "r2", "r3", "r4"]
-    },
-    "gallery": {
-      "type": "gallery-grid",
-      "settings": {
-        "anchor": "retours",
-        "kicker": "Retours clients",
-        "heading": "Photos partagées par la communauté"
-      },
-      "blocks": {
-        "p1": { "type": "photo" },
-        "p2": { "type": "photo" },
-        "p3": { "type": "photo" },
-        "p4": { "type": "photo" },
-        "p5": { "type": "photo" },
-        "p6": { "type": "photo" },
-        "p7": { "type": "photo" },
-        "p8": { "type": "photo" }
-      },
-      "block_order": ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"]
     }
   },
-  "order": ["hero", "categories", "featured", "reviews", "gallery"]
+  "order": ["hero"]
 }
