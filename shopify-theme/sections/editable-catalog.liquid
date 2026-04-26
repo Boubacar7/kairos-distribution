@@ -17,7 +17,7 @@
       <div class="product-grid">
         {%- for block in section.blocks -%}
           {%- assign b = block.settings -%}
-          <button type="button" class="product-card product-card-button" data-product-id="{{ block.id }}" {{ block.shopify_attributes }}>
+          <div role="button" tabindex="0" class="product-card product-card-button" data-product-id="{{ block.id }}" {{ block.shopify_attributes }}>
             <div class="media">
               {%- if b.image -%}
                 <img
@@ -104,7 +104,7 @@
                 </div>
               </div>
             </template>
-          </button>
+          </div>
         {%- endfor -%}
       </div>
     {%- else -%}

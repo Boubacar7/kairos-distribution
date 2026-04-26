@@ -17,38 +17,44 @@
 
     <nav class="nav-links">
       {%- comment -%}
-        Priorité 1 : liens saisis dans le Customizer (section settings)
-        Priorité 2 : menu Shopify sélectionné (link_list)
+        Priorité 1 : liens saisis dans le Customizer (déroulés en dur car
+        Shopify Liquid ne supporte pas section.settings[clé_dynamique]).
+        Priorité 2 : menu Shopify sélectionné (link_list).
       {%- endcomment -%}
       {%- assign has_custom_links = false -%}
-      {%- if section.settings.link_1_label != blank or section.settings.link_2_label != blank or section.settings.link_3_label != blank or section.settings.link_4_label != blank or section.settings.link_5_label != blank -%}
+      {%- if section.settings.link_1_label != blank
+          or section.settings.link_2_label != blank
+          or section.settings.link_3_label != blank
+          or section.settings.link_4_label != blank
+          or section.settings.link_5_label != blank
+      -%}
         {%- assign has_custom_links = true -%}
       {%- endif -%}
 
       {%- if has_custom_links -%}
-        {%- for i in (1..5) -%}
-          {%- assign label_key = 'link_' | append: i | append: '_label' -%}
-          {%- assign url_key   = 'link_' | append: i | append: '_url' -%}
-          {%- assign label     = section.settings[label_key] -%}
-          {%- assign url       = section.settings[url_key] -%}
-          {%- if label != blank -%}
-            {%- assign url_value = url | default: '#' -%}
-            <a href="{{ url_value }}"
-               class="nav-link"
-               {% if url_value contains '#' %}data-anchor="{{ url_value | split: '#' | last }}"{% endif %}>
-              {{ label }}
-            </a>
-          {%- endif -%}
-        {%- endfor -%}
+        {%- if section.settings.link_1_label != blank -%}
+          {%- assign u1 = section.settings.link_1_url | default: '#' -%}
+          <a href="{{ u1 }}" class="nav-link"{% if u1 contains '#' %} data-anchor="{{ u1 | split: '#' | last }}"{% endif %}>{{ section.settings.link_1_label }}</a>
+        {%- endif -%}
+        {%- if section.settings.link_2_label != blank -%}
+          {%- assign u2 = section.settings.link_2_url | default: '#' -%}
+          <a href="{{ u2 }}" class="nav-link"{% if u2 contains '#' %} data-anchor="{{ u2 | split: '#' | last }}"{% endif %}>{{ section.settings.link_2_label }}</a>
+        {%- endif -%}
+        {%- if section.settings.link_3_label != blank -%}
+          {%- assign u3 = section.settings.link_3_url | default: '#' -%}
+          <a href="{{ u3 }}" class="nav-link"{% if u3 contains '#' %} data-anchor="{{ u3 | split: '#' | last }}"{% endif %}>{{ section.settings.link_3_label }}</a>
+        {%- endif -%}
+        {%- if section.settings.link_4_label != blank -%}
+          {%- assign u4 = section.settings.link_4_url | default: '#' -%}
+          <a href="{{ u4 }}" class="nav-link"{% if u4 contains '#' %} data-anchor="{{ u4 | split: '#' | last }}"{% endif %}>{{ section.settings.link_4_label }}</a>
+        {%- endif -%}
+        {%- if section.settings.link_5_label != blank -%}
+          {%- assign u5 = section.settings.link_5_url | default: '#' -%}
+          <a href="{{ u5 }}" class="nav-link"{% if u5 contains '#' %} data-anchor="{{ u5 | split: '#' | last }}"{% endif %}>{{ section.settings.link_5_label }}</a>
+        {%- endif -%}
       {%- else -%}
         {%- for link in section.settings.menu.links -%}
-          <a
-            href="{{ link.url }}"
-            class="nav-link{% if link.active %} active{% endif %}"
-            {% if link.url contains '#' %}data-anchor="{{ link.url | split: '#' | last }}"{% endif %}
-          >
-            {{ link.title }}
-          </a>
+          <a href="{{ link.url }}" class="nav-link{% if link.active %} active{% endif %}"{% if link.url contains '#' %} data-anchor="{{ link.url | split: '#' | last }}"{% endif %}>{{ link.title }}</a>
         {%- endfor -%}
       {%- endif -%}
     </nav>
@@ -64,13 +70,12 @@
         {%- if settings.currency_show_cad  -%}<button type="button" class="cur-btn" data-currency="CAD">CAD</button>{%- endif -%}
       </div>
 
-      {%- if localization.available_languages.size > 1 -%}
-        {%- form 'localization', id: 'header-language-form' -%}
+      {%- if localization and localization.available_languages and localization.available_languages.size > 1 -%}
+        {%- form 'localization' -%}
           <div class="lang-seg" role="group" aria-label="Langue">
             {%- for lang in localization.available_languages -%}
               <button type="submit" name="locale_code" value="{{ lang.iso_code }}"
-                      class="lang-btn{% if lang.iso_code == localization.language.iso_code %} on{% endif %}"
-                      aria-current="{% if lang.iso_code == localization.language.iso_code %}true{% else %}false{% endif %}">
+                      class="lang-btn{% if lang.iso_code == localization.language.iso_code %} on{% endif %}">
                 {{ lang.iso_code | upcase }}
               </button>
             {%- endfor -%}
@@ -99,26 +104,29 @@
 
   <div class="nav-mobile-panel" data-mobile-panel hidden>
     {%- if has_custom_links -%}
-      {%- for i in (1..5) -%}
-        {%- assign label_key = 'link_' | append: i | append: '_label' -%}
-        {%- assign url_key   = 'link_' | append: i | append: '_url' -%}
-        {%- assign label     = section.settings[label_key] -%}
-        {%- assign url       = section.settings[url_key] -%}
-        {%- if label != blank -%}
-          {%- assign url_value = url | default: '#' -%}
-          <a href="{{ url_value }}"
-             class="nav-mobile-link"
-             {% if url_value contains '#' %}data-anchor="{{ url_value | split: '#' | last }}"{% endif %}>
-            {{ label }}
-          </a>
-        {%- endif -%}
-      {%- endfor -%}
+      {%- if section.settings.link_1_label != blank -%}
+        {%- assign m1 = section.settings.link_1_url | default: '#' -%}
+        <a href="{{ m1 }}" class="nav-mobile-link"{% if m1 contains '#' %} data-anchor="{{ m1 | split: '#' | last }}"{% endif %}>{{ section.settings.link_1_label }}</a>
+      {%- endif -%}
+      {%- if section.settings.link_2_label != blank -%}
+        {%- assign m2 = section.settings.link_2_url | default: '#' -%}
+        <a href="{{ m2 }}" class="nav-mobile-link"{% if m2 contains '#' %} data-anchor="{{ m2 | split: '#' | last }}"{% endif %}>{{ section.settings.link_2_label }}</a>
+      {%- endif -%}
+      {%- if section.settings.link_3_label != blank -%}
+        {%- assign m3 = section.settings.link_3_url | default: '#' -%}
+        <a href="{{ m3 }}" class="nav-mobile-link"{% if m3 contains '#' %} data-anchor="{{ m3 | split: '#' | last }}"{% endif %}>{{ section.settings.link_3_label }}</a>
+      {%- endif -%}
+      {%- if section.settings.link_4_label != blank -%}
+        {%- assign m4 = section.settings.link_4_url | default: '#' -%}
+        <a href="{{ m4 }}" class="nav-mobile-link"{% if m4 contains '#' %} data-anchor="{{ m4 | split: '#' | last }}"{% endif %}>{{ section.settings.link_4_label }}</a>
+      {%- endif -%}
+      {%- if section.settings.link_5_label != blank -%}
+        {%- assign m5 = section.settings.link_5_url | default: '#' -%}
+        <a href="{{ m5 }}" class="nav-mobile-link"{% if m5 contains '#' %} data-anchor="{{ m5 | split: '#' | last }}"{% endif %}>{{ section.settings.link_5_label }}</a>
+      {%- endif -%}
     {%- else -%}
       {%- for link in section.settings.menu.links -%}
-        <a href="{{ link.url }}"
-           class="nav-mobile-link{% if link.active %} active{% endif %}"
-           {% if link.url contains '#' %}data-anchor="{{ link.url | split: '#' | last }}"{% endif %}
-        >{{ link.title }}</a>
+        <a href="{{ link.url }}" class="nav-mobile-link{% if link.active %} active{% endif %}"{% if link.url contains '#' %} data-anchor="{{ link.url | split: '#' | last }}"{% endif %}>{{ link.title }}</a>
       {%- endfor -%}
     {%- endif -%}
   </div>
