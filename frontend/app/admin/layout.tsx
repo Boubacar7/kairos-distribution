@@ -31,6 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const tabs = [
     { href: '/admin/dashboard', label: 'Tableau de bord' },
     { href: '/admin/produits', label: 'Produits' },
+    { href: '/admin/stock', label: 'Stock' },
     { href: '/admin/commandes', label: 'Commandes' },
   ];
 
